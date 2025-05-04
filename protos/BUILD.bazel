@@ -1,6 +1,6 @@
 proto_library(
     name = "hello_proto",
-    srcs = ["hello.proto"],
+    srcs = glob(["*.proto"]),
     visibility = ["//visibility:public"],
 )
 

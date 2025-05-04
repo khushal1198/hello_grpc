@@ -2,7 +2,7 @@ load("@my_pip_deps//:requirements.bzl", "requirement")
 
 py_library(
     name = "impl_lib",
-    srcs = ["service_impl.py", "__init__.py"],
+    srcs = glob(["*.py"]),
     imports = ["server/impl"],
     deps = ["//generated:hello_generated", requirement("grpcio")],
     visibility = ["//visibility:public"],
