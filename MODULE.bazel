@@ -5,18 +5,27 @@
 # For more details, please check https://github.com/bazelbuild/bazel/issues/18958
 ###############################################################################
 
+# Use bazel_dep to specify the exact dependency and its version for Bazel extensions.
+# Here, we add the rules_python Bazel extension for Python support and pip integration.
 bazel_dep(name = "rules_python", version = "0.40.0")
 # bazel_dep(name = "rules_proto", version = "6.0.0")
 
+# use_extension loads a Bazel extension, making its functions available in this module.
+# Here, we load the rules_python extension to configure the Python toolchain.
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+# python.toolchain specifies the Python version to use for all Bazel Python builds in this repo.
 python.toolchain(
     python_version = "3.11",
 )
 
+# Register the pip extension for Python dependency management via pip/requirements files.
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+# pip.parse parses a requirements file and exposes dependencies as Bazel targets.
+# In older Bazel/rules_python setups, this was called pip_parse (WORKSPACE) or pip_install (rules_python <0.10).
 pip.parse(
-    hub_name = "my_pip_deps",
+    hub_name = "my_pip_deps",  # Name of the generated Bazel repo for pip dependencies; must match the name used in load() and requirement() calls in all BUILD.bazel files throughout the repo
     python_version = "3.11",
     requirements_lock = "//:requirements_lock.txt",
 )
+# Make the generated pip dependencies available to the build.
 use_repo(pip, "my_pip_deps")
