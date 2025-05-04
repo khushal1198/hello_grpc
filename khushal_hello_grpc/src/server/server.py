@@ -1,7 +1,7 @@
 import grpc
 from concurrent import futures
-from server.impl.service_impl import HelloService
-from generated import hello_pb2_grpc
+from khushal_hello_grpc.src.server.impl.service_impl import HelloService
+from khushal_hello_grpc.src.generated import hello_pb2_grpc
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

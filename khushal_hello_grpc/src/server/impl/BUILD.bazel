@@ -4,6 +4,6 @@ py_library(
     name = "impl_lib",
     srcs = glob(["*.py"]),
     imports = ["server/impl"],
-    deps = ["//generated:hello_generated", requirement("grpcio")],
+    deps = ["//khushal_hello_grpc/src/generated:hello_generated", requirement("grpcio")],
     visibility = ["//visibility:public"],
 ) 

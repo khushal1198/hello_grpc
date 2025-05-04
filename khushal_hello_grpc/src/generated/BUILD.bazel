@@ -21,7 +21,7 @@ py_library(
         "hello_pb2_grpc.py",
         "__init__.py",
     ],
-    imports = ["generated"],
+    imports = ["khushal_hello_grpc/src/generated"],
     deps = [requirement("protobuf")],
     visibility = ["//visibility:public"],
 ) 
