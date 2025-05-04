@@ -1,0 +1,11 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+py_test(
+    name = "test_server",
+    srcs = ["test_server.py"],
+    deps = [
+        "//src/server/impl:impl_lib",
+        "//src/generated:hello_generated",
+        requirement("pytest"),
+    ],
+) 
