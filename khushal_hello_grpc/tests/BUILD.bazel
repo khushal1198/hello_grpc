@@ -6,6 +6,5 @@ py_test(
     deps = [
         "//khushal_hello_grpc/src/server/impl:impl_lib",
         "//khushal_hello_grpc/src/generated:hello_generated",
-        requirement("pytest"),
     ],
 ) 

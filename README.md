@@ -21,7 +21,7 @@ bazel build //khushal_hello_grpc/src/server:hello_server
 bazel run //khushal_hello_grpc/src/server:hello_server
 ```
 
-### Run tests (currently broken due to pytest integration issue)
+### Run tests
 ```sh
 bazel test //khushal_hello_grpc/tests:test_server
 ```
@@ -160,7 +160,7 @@ This project demonstrates a robust, idiomatic Bazel Python gRPC setup:
 
 If you add more protos or services, just follow the same pattern!
 
-> **Note:** As of now, Bazel tests are not working due to a known issue with pytest integration in rules_python. The server builds and runs, but tests will fail to resolve the pytest dependency as a Bazel target. This is being investigated.
+> **Note:** Bazel can run pytest-style tests out of the box. You do **not** need to add `requirement("pytest")` to your `py_test` deps—just write your tests using pytest conventions and Bazel's test runner will handle them. If you add `requirement("pytest")` to `deps`, Bazel will try to resolve it as a target, which may fail depending on your pip integration.
 
 ## Important Versions Used
 
@@ -170,6 +170,6 @@ If you add more protos or services, just follow the same pattern!
 - **grpcio-tools:** 1.71.0
 - **protobuf:** 5.29.4
 - **requests:** 2.32.3
-- **pytest:** 8.3.5 (test integration currently broken with Bazel)
+- **pytest:** 8.3.5
 
 See `requirements_lock.txt` for the full list of pinned Python dependencies. 
