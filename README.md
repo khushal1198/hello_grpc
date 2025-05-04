@@ -160,4 +160,16 @@ This project demonstrates a robust, idiomatic Bazel Python gRPC setup:
 
 If you add more protos or services, just follow the same pattern!
 
-> **Note:** As of now, Bazel tests are not working due to a known issue with pytest integration in rules_python. The server builds and runs, but tests will fail to resolve the pytest dependency as a Bazel target. This is being investigated. 
+> **Note:** As of now, Bazel tests are not working due to a known issue with pytest integration in rules_python. The server builds and runs, but tests will fail to resolve the pytest dependency as a Bazel target. This is being investigated.
+
+## Important Versions Used
+
+- **rules_python:** 0.40.0
+- **Python:** 3.11
+- **grpcio:** 1.71.0
+- **grpcio-tools:** 1.71.0
+- **protobuf:** 5.29.4
+- **requests:** 2.32.3
+- **pytest:** 8.3.5 (test integration currently broken with Bazel)
+
+See `requirements_lock.txt` for the full list of pinned Python dependencies. 
