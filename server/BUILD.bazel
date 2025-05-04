@@ -1,0 +1,17 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+exports_files(["server.py"], visibility = ["//visibility:public"])
+
+py_library(
+    name = "server_lib",
+    srcs = ["server.py", "__init__.py"],
+    deps = ["//server/impl:impl_lib"],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "hello_server",
+    srcs = ["server.py", "__init__.py"],
+    deps = [":server_lib"],
+    main = "server.py",
+) 

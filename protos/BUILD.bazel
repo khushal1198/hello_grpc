@@ -1,0 +1,7 @@
+proto_library(
+    name = "hello_proto",
+    srcs = ["hello.proto"],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(["hello.proto"], visibility = ["//visibility:public"]) 
