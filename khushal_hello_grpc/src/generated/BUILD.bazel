@@ -1,3 +1,55 @@
+# This genrule generates Python gRPC code from the proto files in ../../../../protos/.
+#
+# $(@D) is a Bazel genrule variable that expands to the output directory for this target. All files you generate or write should go there.
+#
+# How does Bazel know when to run this genrule?
+# - Whenever you run a downstream target (like the server binary or a test) that depends on the generated Python code, Bazel will check if the generated files exist and are up to date.
+# - "Downstream target" means any Bazel target (py_binary, py_test, py_library, etc.) that depends—directly or indirectly—on the output of this genrule, via the Bazel dependency graph (not directory structure).
+# - **Examples from this project:**
+#     - //khushal_hello_grpc/src/generated:hello_generated (py_library) wraps the generated proto code.
+#     - //khushal_hello_grpc/src/server/impl:impl_lib depends on :hello_generated.
+#     - //khushal_hello_grpc/src/server:server_lib depends on //khushal_hello_grpc/src/server/impl:impl_lib.
+#     - //khushal_hello_grpc/src/server:hello_server (py_binary) depends on :server_lib.
+#     - //khushal_hello_grpc/tests:test_server (py_test) depends on //khushal_hello_grpc/src/server/impl:impl_lib and //khushal_hello_grpc/src/generated:hello_generated.
+# - All of these are "downstream" of the genrule because they (directly or indirectly) depend on the generated code.
+# - If the proto file changes, or if the generated files are missing or out of date, Bazel will automatically rerun this genrule before building or running your code.
+# - For example, running `bazel run //khushal_hello_grpc/src/server:hello_server` or `bazel test //khushal_hello_grpc/tests:test_server` will trigger this genrule if needed.
+# - This ensures you never have to manually generate or check in the generated Python files—Bazel always keeps them up to date as part of the build/test process.
+#
+# **How does the py_library depend on the genrule?**
+# - The py_library (hello_generated) does NOT depend on the genrule by name.
+# - Instead, it lists the generated files (hello_pb2.py, hello_pb2_grpc.py, __init__.py) in its srcs.
+# - Bazel sees that these files are not present in the source tree, but are declared as outputs of a genrule in the same package.
+# - When you build or depend on hello_generated, Bazel knows it must first run the genrule to produce those files.
+# - This is how the dependency is established: by file outputs, not by explicit target name.
+#
+# **Can a py_binary depend on a genrule by name?**
+# - No: Bazel does NOT allow a py_binary (or py_library, etc.) to depend on a genrule by name.
+# - You must depend on the files produced by the genrule, or on a target (like a py_library) that wraps those files.
+# - This is a core Bazel concept: targets depend on artifacts (files), not on the process that produces them.
+# - If you want to run a genrule directly, you can build the genrule target itself (bazel build //path/to:my_genrule), but you cannot make a py_binary depend on a genrule by name.
+#
+# It runs the following command (with Bazel variables expanded):
+#
+#   touch $(@D)/__init__.py
+#   # (Ensures the output is a Python package)
+#   cp $(location //protos:hello.proto) $(@D)/hello.proto
+#   # (Copies the proto file into the Bazel sandbox output directory so protoc can find it)
+#   cd $(@D)
+#   # (Change to the output directory so all outputs and patches are in the right place)
+#   python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. hello.proto
+#   # (Generates Python code for messages and gRPC services)
+#   sed -i '' 's/import hello_pb2 as hello__pb2/from . import hello_pb2 as hello__pb2/' hello_pb2_grpc.py
+#   # (This sed command rewrites the import in hello_pb2_grpc.py from 'import hello_pb2 as hello__pb2' to 'from . import hello_pb2 as hello__pb2'.
+#   #  This is necessary because the generated code expects hello_pb2 to be a top-level module, but under Bazel, it is a sibling in a package.
+#   #  The relative import ensures Python can resolve the import correctly when using Bazel's package structure.)
+#
+# The generated files (hello_pb2.py, hello_pb2_grpc.py, __init__.py) are placed in the generated/ directory under this package.
+# The generated files are NOT checked into version control; they are always created by Bazel at build time.
+# Your code should import these as Python modules (e.g., from khushal_hello_grpc.src.generated import hello_pb2).
+#
+# If you add or change proto files, just rebuild or rerun the server/test and Bazel will regenerate the Python code.
+
 load("@my_pip_deps//:requirements.bzl", "requirement")
 
 genrule(
