@@ -8,6 +8,8 @@ certifi==2025.4.26
     # via requests
 charset-normalizer==3.4.2
     # via requests
+exceptiongroup==1.2.2
+    # via pytest
 grpcio==1.71.0
     # via
     #   -r requirements.in
@@ -16,13 +18,23 @@ grpcio-tools==1.71.0
     # via -r requirements.in
 idna==3.10
     # via requests
+iniconfig==2.1.0
+    # via pytest
+packaging==25.0
+    # via pytest
+pluggy==1.5.0
+    # via pytest
 protobuf==5.29.4
     # via grpcio-tools
+pytest==8.3.5
+    # via -r requirements.in
 requests==2.32.3
     # via -r requirements.in
+tomli==2.2.1
+    # via pytest
 urllib3==2.4.0
     # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==80.3.0
+setuptools==80.2.0
     # via grpcio-tools

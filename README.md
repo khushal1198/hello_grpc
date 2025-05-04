@@ -28,8 +28,9 @@ bazel test //khushal_hello_grpc/tests:test_server
 
 ### Update Python dependencies
 ```sh
-python3 -m piptools compile requirements.in
+python3 -m piptools compile requirements.in --output-file=requirements_lock.txt --allow-unsafe
 ```
+> **Note:** We use `requirements_lock.txt` (not the default `requirements.txt`) to ensure fully reproducible builds for Bazel. The `--output-file` flag is required because piptools by default writes to `requirements.txt`, but Bazel bzlmod expects a lock file with a custom name. The `--allow-unsafe` flag is necessary for Bazel because some dependencies (like grpcio-tools) require "unsafe" packages (such as setuptools) to be present in the lock file.
 
 ---
 
@@ -146,7 +147,7 @@ bazel run //server:hello_server
 > **Note:** Every time you build or run the server, Bazel automatically regenerates the proto files. This is enabled by the custom `genrule` in `generated/BUILD.bazel`, which runs the gRPC Python code generator and patches imports as needed. Using a `genrule` for Python gRPC proto generation is the standard and recommended practice with Bazel, since there is no built-in Bazel rule for Python gRPC codegen. This ensures that the latest proto definitions are always used at runtime, and you never need to check in or manually update generated code.
 
 ### Add dependencies:
-- Edit `requirements.in`, then run `python3 -m piptools compile requirements.in` to update `requirements_lock.txt`.
+- Edit `requirements.in`, then run `python3 -m piptools compile requirements.in --output-file=requirements_lock.txt --allow-unsafe` to update `requirements_lock.txt`.
 - Bazel will pick up changes automatically via bzlmod and `pip_parse`.
 
 ---

@@ -1,3 +1,10 @@
+# You can use PEP 508 markers for platform-specific dependencies, e.g.:
+# grpcio==1.71.0 ; sys_platform == "darwin"
+# grpcio==1.60.0 ; sys_platform == "linux"
+#
+# Bazel bzlmod does NOT currently support dynamic selection of separate requirements files per platform.
+# If you use separate files (e.g., requirements_mac.in, requirements_linux.in), you must manually update MODULE.bazel to point to the correct lock file before building on each platform.
+
 requests
 grpcio
 grpcio-tools
