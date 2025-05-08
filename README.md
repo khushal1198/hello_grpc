@@ -1,11 +1,18 @@
 # Python gRPC Service with Bazel: Project Guide
 
+## Prerequisites
+
+- **Docker**: Required for building and running container images.
+  - [Install Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS/Windows)
+  - Or follow the [official Docker Engine install guide](https://docs.docker.com/engine/install/) (Linux)
+
 ## Overview
 This project is a minimal, production-grade Python gRPC service built and managed with Bazel. It demonstrates best practices for Bazel Python projects, including:
 - Modern dependency management with bzlmod (`MODULE.bazel`)
 - gRPC service definition and code generation
 - Clean Bazel package structure
 - Robust handling of Python imports and generated code
+- **Containerization with Docker** (see below)
 
 ---
 
@@ -34,6 +41,89 @@ python3 -m piptools compile requirements.in --output-file=requirements_lock.txt 
 
 ---
 
+## Testing
+
+Tests are located in `khushal_hello_grpc/tests` and use pytest. Bazel's test runner handles pytest automatically.
+
+```sh
+# Run all tests
+bazel test //khushal_hello_grpc/tests:test_server
+
+# Run with verbose output
+bazel test //khushal_hello_grpc/tests:test_server --test_output=all
+
+# Run with coverage
+bazel coverage //khushal_hello_grpc/tests:test_server
+```
+
+### Writing Tests
+1. Place test files in the `khushal_hello_grpc/tests` directory
+2. Name test files with `test_` prefix (e.g., `test_server.py`)
+3. Name test functions with `test_` prefix
+4. Use pytest fixtures and assertions
+
+Example test structure:
+```python
+def test_hello_service():
+    # Arrange
+    service = HelloService()
+    
+    # Act
+    response = service.SayHello(request)
+    
+    # Assert
+    assert response.message == "Hello, World!"
+```
+
+### Test Dependencies
+- Tests use pytest (included in requirements_lock.txt)
+- No need to add pytest to BUILD.bazel deps - Bazel's test runner handles pytest automatically
+- Use `requirement("pytest")` only if you need specific pytest features
+
+---
+
+## Docker Containerization (Production/CI/CD)
+
+This project includes a `Dockerfile` that:
+- Installs all Python dependencies from `requirements_lock.txt` for reproducibility
+- Copies your full Python package and proto definitions into the image
+- Generates Python gRPC code from your proto at build time (using `grpcio-tools`)
+- Patches the generated code for correct relative imports (required for Bazel-style package structure)
+- Sets `PYTHONPATH` so your code can use absolute imports
+- Runs your gRPC server as the container entrypoint
+
+### Build the Docker image
+```sh
+docker build -t hello_server:latest .
+```
+
+### Run the Docker container
+```sh
+docker run -p 50051:50051 hello_server:latest
+```
+
+You should see:
+```
+gRPC server running on port 50051...
+```
+
+You can now connect a gRPC client to `localhost:50051`.
+
+#### How the Dockerfile works (step-by-step):
+1. **Installs dependencies** from `requirements_lock.txt` (including `grpcio-tools` for codegen)
+2. **Copies your full Python package** (`khushal_hello_grpc/`) and proto file(s) into the image
+3. **Generates Python gRPC code** using `python -m grpc_tools.protoc ...` at build time
+4. **Patches the generated `hello_pb2_grpc.py`** to use relative imports (avoids import errors)
+5. **Sets `PYTHONPATH`** so your code can use absolute imports
+6. **Entrypoint** runs your gRPC server
+
+#### Troubleshooting Docker builds
+- If you see `ModuleNotFoundError: No module named 'grpc'`, make sure `requirements_lock.txt` is present and up to date, and that the Dockerfile is not skipping the `pip install` step.
+- If you see `ModuleNotFoundError: No module named 'khushal_hello_grpc'`, make sure the full package is copied and `PYTHONPATH` is set.
+- If you see `ModuleNotFoundError: No module named 'hello_pb2'`, make sure the proto code is generated and the patch step is present in the Dockerfile.
+
+---
+
 ## Project Structure
 ```
 hello_grpc/
@@ -54,6 +144,7 @@ hello_grpc/
 ├── MODULE.bazel
 ├── requirements.in
 ├── requirements_lock.txt
+├── Dockerfile
 ```
 
 ---
@@ -173,4 +264,8 @@ If you add more protos or services, just follow the same pattern!
 - **requests:** 2.32.3
 - **pytest:** 8.3.5
 
-See `requirements_lock.txt` for the full list of pinned Python dependencies. 
+See `requirements_lock.txt` for the full list of pinned Python dependencies.
+
+## Containerization & CI/CD
+
+> **Note:** Building the Docker image is a separate, explicit step—typically done in your CI/CD pipeline (or when you want to deploy). Normal Bazel build and test commands (e.g., `bazel build ...`, `bazel test ...`) do NOT build the Docker image unless you explicitly build the image target (e.g., `bazel build //khushal_hello_grpc/src/server:hello_server_image`).
