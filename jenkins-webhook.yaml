@@ -1,0 +1,15 @@
+apiVersion: jenkins.io/v1alpha2
+kind: Webhook
+metadata:
+  name: hello-grpc-webhook
+  namespace: jenkins
+spec:
+  service:
+    name: jenkins
+    namespace: jenkins
+    port: 8080
+  github:
+    repository: khushal1198/hello_grpc
+    events:
+      - push
+    secret: ${WEBHOOK_SECRET}  # You'll need to replace this with a secure secret 
