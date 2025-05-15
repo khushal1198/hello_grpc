@@ -141,10 +141,16 @@ hello_grpc/
 ├── protos/
 │   ├── BUILD.bazel
 │   └── hello.proto
+├── .jenkins/
+│   ├── setup-credentials.sh
+│   ├── setup-webhook.sh
+│   └── README.md
 ├── MODULE.bazel
 ├── requirements.in
 ├── requirements_lock.txt
 ├── Dockerfile
+├── Jenkinsfile
+└── README.md
 ```
 
 ---
