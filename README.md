@@ -13,6 +13,7 @@ This project is a minimal, production-grade Python gRPC service built and manage
 - Clean Bazel package structure
 - Robust handling of Python imports and generated code
 - **Containerization with Docker** (see below)
+- **Automated CI/CD with GitHub Actions** (see below)
 
 ---
 
@@ -141,6 +142,9 @@ hello_grpc/
 ├── protos/
 │   ├── BUILD.bazel
 │   └── hello.proto
+├── .github/
+│   └── workflows/
+│       └── build.yml
 ├── .jenkins/
 │   ├── setup-credentials.sh
 │   ├── setup-webhook.sh
@@ -275,3 +279,64 @@ See `requirements_lock.txt` for the full list of pinned Python dependencies.
 ## Containerization & CI/CD
 
 > **Note:** Building the Docker image is a separate, explicit step—typically done in your CI/CD pipeline (or when you want to deploy). Normal Bazel build and test commands (e.g., `bazel build ...`, `bazel test ...`) do NOT build the Docker image unless you explicitly build the image target (e.g., `bazel build //khushal_hello_grpc/src/server:hello_server_image`).
+
+---
+
+## GitHub Actions CI/CD
+
+This project uses GitHub Actions for automated Continuous Integration and Continuous Deployment. Every push to the `master` or `main` branch triggers an automated build and deployment pipeline.
+
+### What happens on each push:
+
+1. **Automatic Build**: GitHub Actions automatically builds the Docker image using the `Dockerfile`
+2. **Dependency Installation**: All Python dependencies are installed from `requirements_lock.txt`
+3. **Code Generation**: gRPC code is generated from proto files during the build process
+4. **Image Push**: The built image is pushed to GitHub Container Registry (ghcr.io) with multiple tags:
+   - `ghcr.io/khushal1198/hello_grpc:latest`
+   - `ghcr.io/khushal1198/hello_grpc:master` (or `main`)
+   - `ghcr.io/khushal1198/hello_grpc:master-<commit-hash>`
+
+### Workflow Configuration
+
+The CI/CD pipeline is configured in `.github/workflows/build.yml` and includes:
+
+- **Build Matrix**: Supports multiple platforms (linux/amd64, linux/arm64)
+- **Caching**: Uses GitHub Actions cache to speed up builds
+- **Security**: Uses GitHub secrets for registry authentication
+- **Multi-tagging**: Automatically tags images with latest, branch name, and commit hash
+
+### Required GitHub Secrets
+
+The following secrets must be configured in your GitHub repository settings:
+
+- `CR_PAT`: GitHub Personal Access Token with `write:packages` scope
+- `CR_USERNAME`: Your GitHub username
+
+### Pulling and Running the Built Image
+
+Once the workflow completes successfully, you can pull and run the image:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/khushal1198/hello_grpc:latest
+
+# Run the container (for Apple Silicon Macs, specify platform)
+docker run --platform linux/amd64 -p 50051:50051 ghcr.io/khushal1198/hello_grpc:latest
+
+# For x86_64 systems
+docker run -p 50051:50051 ghcr.io/khushal1198/hello_grpc:latest
+```
+
+### Monitoring Builds
+
+- View build status in the "Actions" tab of your GitHub repository
+- Each build shows detailed logs of the Docker build process
+- Failed builds will show specific error messages for debugging
+
+### Benefits of This Setup
+
+- **Automated Deployment**: No manual intervention required for deployments
+- **Reproducible Builds**: Every build uses the same environment and dependencies
+- **Version Tracking**: Each commit gets its own tagged image
+- **Easy Rollbacks**: Can quickly revert to any previous commit's image
+- **Production Ready**: Images are built with production best practices
