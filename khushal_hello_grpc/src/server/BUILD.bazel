@@ -5,7 +5,11 @@ exports_files(["server.py"], visibility = ["//visibility:public"])
 py_library(
     name = "server_lib",
     srcs = glob(["*.py"]),
-    deps = ["//khushal_hello_grpc/src/server/impl:impl_lib"],
+    deps = [
+        "//khushal_hello_grpc/src/server/impl:impl_lib",
+        requirement("grpcio-health-checking"),
+        requirement("grpcio"),
+    ],
     visibility = ["//visibility:public"],
 )
 
