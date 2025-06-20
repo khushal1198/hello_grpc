@@ -21,6 +21,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Update deployment with commit hash
+      run: |
+        COMMIT_HASH=${{ github.sha }}
+        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:master-${COMMIT_HASH::8}|" k8s/deployment.yaml
+        echo "Updated deployment.yaml with commit hash: ${COMMIT_HASH::8}"
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -50,4 +56,12 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
-        cache-to: type=gha,mode=max 
+        cache-to: type=gha,mode=max
+
+    - name: Commit and push updated deployment
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add k8s/deployment.yaml
+        git commit -m "Auto-update deployment with commit hash ${{ github.sha::8 }}" || exit 0
+        git push 

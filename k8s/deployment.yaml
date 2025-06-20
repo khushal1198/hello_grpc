@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: hello-grpc
-        image: ghcr.io/khushal1198/hello_grpc:latest
+        image: ghcr.io/khushal1198/hello_grpc:master
         ports:
         - containerPort: 50051
         resources:
@@ -26,12 +26,12 @@ spec:
             cpu: "500m"
             memory: "512Mi"
         readinessProbe:
-          grpc:
+          tcpSocket:
             port: 50051
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
-          grpc:
+          tcpSocket:
             port: 50051
           initialDelaySeconds: 15
           periodSeconds: 20
