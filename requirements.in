@@ -8,4 +8,5 @@
 requests
 grpcio
 grpcio-tools
+grpcio-health-checking
 pytest 
