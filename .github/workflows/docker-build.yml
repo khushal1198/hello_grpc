@@ -21,13 +21,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Update deployment with commit hash
-      run: |
-        COMMIT_HASH=${{ github.sha }}
-        SHORT_HASH=${COMMIT_HASH:0:8}
-        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:master-${SHORT_HASH}|" k8s/deployment.yaml
-        echo "Updated deployment.yaml with commit hash: ${SHORT_HASH}"
-
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -58,6 +51,13 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Update deployment with commit hash
+      run: |
+        COMMIT_HASH=${{ github.sha }}
+        SHORT_HASH=${COMMIT_HASH:0:8}
+        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:master-${SHORT_HASH}|" k8s/deployment.yaml
+        echo "Updated deployment.yaml with commit hash: ${SHORT_HASH}"
 
     - name: Commit and push updated deployment
       run: |
