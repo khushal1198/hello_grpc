@@ -24,8 +24,9 @@ jobs:
     - name: Update deployment with commit hash
       run: |
         COMMIT_HASH=${{ github.sha }}
-        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:master-${COMMIT_HASH::8}|" k8s/deployment.yaml
-        echo "Updated deployment.yaml with commit hash: ${COMMIT_HASH::8}"
+        SHORT_HASH=${COMMIT_HASH:0:8}
+        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:master-${SHORT_HASH}|" k8s/deployment.yaml
+        echo "Updated deployment.yaml with commit hash: ${SHORT_HASH}"
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -60,8 +61,10 @@ jobs:
 
     - name: Commit and push updated deployment
       run: |
+        COMMIT_HASH=${{ github.sha }}
+        SHORT_HASH=${COMMIT_HASH:0:8}
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add k8s/deployment.yaml
-        git commit -m "Auto-update deployment with commit hash ${{ github.sha::8 }}" || exit 0
+        git commit -m "Auto-update deployment with commit hash ${SHORT_HASH}" || exit 0
         git push 
