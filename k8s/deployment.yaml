@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: hello-grpc
-        image: ghcr.io/khushal1198/hello_grpc:master-57e93fc6
+        image: ghcr.io/khushal1198/hello_grpc:master-7c4c4aa5
         ports:
         - containerPort: 50051
         resources:
