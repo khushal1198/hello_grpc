@@ -9,6 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  MANIFESTS_REPO: khushal1198/khushal-k8s-manifests
 
 jobs:
   build:
@@ -52,22 +53,30 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Update deployment with commit hash
+    - name: Clone manifests repository
       run: |
+        git clone https://x-access-token:${{ secrets.MANIFESTS_REPO_TOKEN }}@github.com/${{ env.MANIFESTS_REPO }}.git manifests-repo
+        cd manifests-repo
+
+    - name: Update deployment manifest
+      run: |
+        cd manifests-repo
         # Get the SHA tag from the metadata action output
         SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
         if [ -z "$SHA_TAG" ]; then
           echo "Error: Could not find SHA tag in metadata output"
           exit 1
         fi
-        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:${SHA_TAG}|" k8s/deployment.yaml
+        echo "Updating deployment with tag: ${SHA_TAG}"
+        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:${SHA_TAG}|" hello-grpc/deployment.yaml
         echo "Updated deployment.yaml with tag: ${SHA_TAG}"
 
-    - name: Commit and push updated deployment
+    - name: Commit and push to manifests repository
       run: |
+        cd manifests-repo
         SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add k8s/deployment.yaml
-        git commit -m "Auto-update deployment with tag ${SHA_TAG}" || exit 0
-        git push 
+        git add hello-grpc/deployment.yaml
+        git commit -m "Auto-update hello-grpc deployment with tag ${SHA_TAG}" || exit 0
+        git push origin main 
