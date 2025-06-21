@@ -54,17 +54,20 @@ jobs:
 
     - name: Update deployment with commit hash
       run: |
-        COMMIT_HASH=${{ github.sha }}
-        SHORT_HASH=${COMMIT_HASH:0:8}
-        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:master-${SHORT_HASH}|" k8s/deployment.yaml
-        echo "Updated deployment.yaml with commit hash: ${SHORT_HASH}"
+        # Get the SHA tag from the metadata action output
+        SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
+        if [ -z "$SHA_TAG" ]; then
+          echo "Error: Could not find SHA tag in metadata output"
+          exit 1
+        fi
+        sed -i "s|image: ghcr.io/khushal1198/hello_grpc:.*|image: ghcr.io/khushal1198/hello_grpc:${SHA_TAG}|" k8s/deployment.yaml
+        echo "Updated deployment.yaml with tag: ${SHA_TAG}"
 
     - name: Commit and push updated deployment
       run: |
-        COMMIT_HASH=${{ github.sha }}
-        SHORT_HASH=${COMMIT_HASH:0:8}
+        SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add k8s/deployment.yaml
-        git commit -m "Auto-update deployment with commit hash ${SHORT_HASH}" || exit 0
+        git commit -m "Auto-update deployment with tag ${SHA_TAG}" || exit 0
         git push 
