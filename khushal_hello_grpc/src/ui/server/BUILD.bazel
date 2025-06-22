@@ -1,0 +1,14 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "ui_lib",
+    srcs = glob(["*.py"]),
+    deps = [
+        "//khushal_hello_grpc/src/generated:hello_generated",
+        "//khushal_hello_grpc/src/common:common_lib",
+        requirement("aiohttp"),
+        requirement("aiohttp-cors"),
+        requirement("grpcio"),
+    ],
+    visibility = ["//visibility:public"],
+) 

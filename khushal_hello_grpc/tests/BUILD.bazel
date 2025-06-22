@@ -9,4 +9,17 @@ py_test(
         requirement("grpcio-health-checking"),
         requirement("grpcio"),
     ],
+)
+
+py_test(
+    name = "test_ui_server",
+    srcs = ["ui/test_ui_server.py"],
+    deps = [
+        "//khushal_hello_grpc/src/ui/server:ui_lib",
+        "//khushal_hello_grpc/src/generated:hello_generated",
+        "//khushal_hello_grpc/src/common:common_lib",
+        requirement("aiohttp"),
+        requirement("pytest"),
+        requirement("grpcio"),
+    ],
 ) 
