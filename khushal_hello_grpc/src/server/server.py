@@ -7,11 +7,15 @@ from khushal_hello_grpc.src.generated import hello_pb2_grpc
 from grpc_health.v1 import health
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
+from khushal_hello_grpc.src.common.logging_config import setup_logging
 
-def status_printer():
-    """Print server status every 10 seconds"""
+# Set up logging for the server
+logger = setup_logging(__name__)
+
+def status_logger():
+    """Log server status every 10 seconds"""
     while True:
-        print("gRPC server running on port 50051...")
+        logger.info("gRPC server running on port 50051...")
         time.sleep(10)
 
 def serve():
@@ -25,11 +29,11 @@ def serve():
     health_servicer.set('HelloService', health_pb2.HealthCheckResponse.SERVING)
     server.add_insecure_port('[::]:50051')
     
-    # Start status printer in background thread
-    status_thread = threading.Thread(target=status_printer, daemon=True)
+    # Start status logger in background thread
+    status_thread = threading.Thread(target=status_logger, daemon=True)
     status_thread.start()
     
-    print("gRPC server starting on port 50051...")
+    logger.info("gRPC server starting on port 50051...")
     server.start()
     server.wait_for_termination()
 

@@ -7,6 +7,7 @@ py_library(
     srcs = glob(["*.py"]),
     deps = [
         "//khushal_hello_grpc/src/server/impl:impl_lib",
+        "//khushal_hello_grpc/src/common:common_lib",
         requirement("grpcio-health-checking"),
         requirement("grpcio"),
     ],
