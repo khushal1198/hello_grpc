@@ -26,10 +26,10 @@ from khushal_hello_grpc.src.common.logging_config import setup_root_logging, log
 # Configure root logging so logging.info(), logging.debug(), etc. can be used directly
 setup_root_logging(level=logging.DEBUG)
 
-# Configuration
-GRPC_SERVER_HOST = "localhost"
-GRPC_SERVER_PORT = 50051
-UI_SERVER_PORT = 8081
+# Configuration - use environment variables for containerized environments
+GRPC_SERVER_HOST = os.getenv("GRPC_SERVER_HOST", "localhost")
+GRPC_SERVER_PORT = int(os.getenv("GRPC_SERVER_PORT", "50051"))
+UI_SERVER_PORT = int(os.getenv("UI_SERVER_PORT", "8081"))
 
 class GrpcClient:
     """gRPC client for communicating with the Hello service"""
@@ -37,40 +37,60 @@ class GrpcClient:
     def __init__(self):
         self.channel = None
         self.stub = None
+        self.connected = False
     
     async def connect(self):
-        """Connect to the gRPC server"""
+        """Connect to the gRPC server - non-blocking"""
         try:
-            # Create gRPC channel
+            # Create gRPC channel with timeout
             self.channel = grpc.aio.insecure_channel(f"{GRPC_SERVER_HOST}:{GRPC_SERVER_PORT}")
             self.stub = hello_pb2_grpc.HelloServiceStub(self.channel)
             
-            # Test connection
-            await self.health_check()
-            logging.info(f"Connected to gRPC server at {GRPC_SERVER_HOST}:{GRPC_SERVER_PORT}")
-            return True
+            # Test connection with timeout
+            try:
+                await asyncio.wait_for(self.health_check(), timeout=5.0)
+                self.connected = True
+                logging.info(f"Connected to gRPC server at {GRPC_SERVER_HOST}:{GRPC_SERVER_PORT}")
+                return True
+            except asyncio.TimeoutError:
+                logging.warning(f"gRPC server connection timeout at {GRPC_SERVER_HOST}:{GRPC_SERVER_PORT}")
+                self.connected = False
+                return False
+            except Exception as e:
+                logging.warning(f"gRPC server not available at {GRPC_SERVER_HOST}:{GRPC_SERVER_PORT}: {e}")
+                self.connected = False
+                return False
             
         except Exception as e:
-            logging.error(f"Failed to connect to gRPC server: {e}")
+            logging.warning(f"Failed to initialize gRPC client: {e}")
+            self.connected = False
             return False
     
     async def disconnect(self):
         """Disconnect from the gRPC server"""
         if self.channel:
             await self.channel.close()
+        self.connected = False
     
     async def say_hello(self, name: str) -> str:
         """Send a hello request to the gRPC server"""
+        if not self.connected:
+            raise Exception("gRPC client not connected")
+        
         try:
             request = hello_pb2.HelloRequest(name=name)
             response = await self.stub.SayHello(request)
             return response.message
         except Exception as e:
             logging.error(f"gRPC call failed: {e}")
+            self.connected = False  # Mark as disconnected on failure
             raise e
     
     async def health_check(self) -> bool:
         """Check if the gRPC server is healthy"""
+        if not self.connected:
+            return False
+            
         try:
             # Simple ping to check if server is reachable
             request = hello_pb2.HelloRequest(name="health_check")
@@ -78,6 +98,7 @@ class GrpcClient:
             return True
         except Exception as e:
             logging.error(f"Health check failed: {e}")
+            self.connected = False
             return False
 
 class UIServer:
@@ -86,6 +107,84 @@ class UIServer:
     def __init__(self):
         self.grpc_client = GrpcClient()
         self.app = None
+    
+    def find_static_files(self):
+        """Find static files directory with multiple fallback strategies"""
+        possible_paths = [
+            # Bazel runfiles path
+            ("bazel_runfiles", lambda: self._get_bazel_runfiles_path()),
+            # Container path (when running in Docker/K8s)
+            ("container", lambda: "/app/static"),
+            # Development path
+            ("dev", lambda: os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static')),
+            # Alternative development path
+            ("dev_alt", lambda: os.path.join(os.path.dirname(__file__), '..', '..', 'ui', 'frontend', 'static')),
+        ]
+        
+        for name, path_func in possible_paths:
+            try:
+                path = path_func()
+                if path and os.path.exists(path):
+                    logging.info(f"Found static files at {name} path: {path}")
+                    return path
+            except Exception as e:
+                logging.debug(f"Failed to find static files at {name} path: {e}")
+        
+        # If no path found, create a minimal fallback
+        logging.warning("No static files found, creating minimal fallback")
+        return self._create_fallback_static_files()
+    
+    def _get_bazel_runfiles_path(self):
+        """Get Bazel runfiles path"""
+        try:
+            from bazel_tools.tools.python.runfiles import runfiles
+            r = runfiles.Create()
+            static_runfile_path = r.Rlocation("_main/khushal_hello_grpc/src/ui/frontend/static")
+            if static_runfile_path and os.path.exists(static_runfile_path):
+                return static_runfile_path
+        except (ImportError, FileNotFoundError):
+            pass
+        return None
+    
+    def _create_fallback_static_files(self):
+        """Create minimal fallback static files if none exist"""
+        fallback_dir = "/tmp/fallback_static"
+        os.makedirs(fallback_dir, exist_ok=True)
+        
+        # Create minimal index.html
+        index_html = """<!DOCTYPE html>
+<html>
+<head>
+    <title>gRPC Hello Service - Fallback</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background-color: #ffebee; color: #c62828; }
+        .success { background-color: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>gRPC Hello Service</h1>
+        <div class="status error">
+            <strong>Static files not found</strong><br>
+            This is a fallback page. The UI server is running but static files are missing.
+        </div>
+        <h2>API Endpoints</h2>
+        <ul>
+            <li><strong>Health Check:</strong> <a href="/api/health">/api/health</a></li>
+            <li><strong>Hello API:</strong> POST /api/hello (with JSON body: {"name": "Your Name"})</li>
+        </ul>
+    </div>
+</body>
+</html>"""
+        
+        with open(os.path.join(fallback_dir, "index.html"), "w") as f:
+            f.write(index_html)
+        
+        logging.info(f"Created fallback static files at {fallback_dir}")
+        return fallback_dir
     
     async def start(self):
         """Start the UI server"""
@@ -101,42 +200,15 @@ class UIServer:
             )
         })
         
-        # Connect to gRPC server
-        connected = await self.grpc_client.connect()
-        if not connected:
-            logging.warning("Failed to connect to gRPC server. UI will work in simulation mode.")
+        # Try to connect to gRPC server (non-blocking)
+        asyncio.create_task(self.grpc_client.connect())
         
         # Add routes
         self.app.router.add_post('/api/hello', self.handle_hello_request)
         self.app.router.add_get('/api/health', self.handle_health_check)
         
-        # Use Bazel runfiles to resolve the static directory
-        try:
-            # Try to import runfiles from bazel_tools
-            from bazel_tools.tools.python.runfiles import runfiles
-            r = runfiles.Create()
-            # Use the correct runfiles path
-            static_runfile_path = r.Rlocation("_main/khushal_hello_grpc/src/ui/frontend/static")
-            if static_runfile_path and os.path.exists(static_runfile_path):
-                frontend_path = static_runfile_path
-                print(f"[DEBUG] (runfiles) Serving static files from: {frontend_path}")
-            else:
-                raise FileNotFoundError("Runfiles path not found")
-        except (ImportError, FileNotFoundError) as e:
-            # Fallback for non-Bazel environments or if runfiles fails
-            frontend_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static')
-            print(f"[DEBUG] (fallback) Serving static files from: {os.path.abspath(frontend_path)}")
-            print(f"[DEBUG] Fallback reason: {e}")
-        
-        # Verify the path exists
-        if not os.path.exists(frontend_path):
-            print(f"[ERROR] Static path does not exist: {frontend_path}")
-            # Try to list the parent directory to debug
-            parent_dir = os.path.dirname(frontend_path)
-            if os.path.exists(parent_dir):
-                print(f"[DEBUG] Parent directory contents: {os.listdir(parent_dir)}")
-        else:
-            print(f"[DEBUG] Static path exists and contains: {os.listdir(frontend_path)}")
+        # Find static files directory
+        frontend_path = self.find_static_files()
         
         # Add custom static file handler with logging
         async def static_handler(request):
@@ -193,13 +265,23 @@ class UIServer:
             
             # Try to make actual gRPC call
             try:
-                message = await self.grpc_client.say_hello(name)
-                response_data = {"message": message}
-                logging.info(f"Handled hello request for name: {name} via gRPC")
+                if self.grpc_client.connected:
+                    message = await self.grpc_client.say_hello(name)
+                    response_data = {"message": message}
+                    logging.info(f"Handled hello request for name: {name} via gRPC")
+                else:
+                    # Try to reconnect
+                    await self.grpc_client.connect()
+                    if self.grpc_client.connected:
+                        message = await self.grpc_client.say_hello(name)
+                        response_data = {"message": message}
+                        logging.info(f"Handled hello request for name: {name} via gRPC (reconnected)")
+                    else:
+                        raise Exception("gRPC server not available")
             except Exception as e:
                 # Fallback to simulation if gRPC fails
                 response_data = {
-                    "message": f"Hello, {name}! (Simulated response - gRPC server unavailable)"
+                    "message": f"Hello, {name}! (Simulated response - gRPC server unavailable: {str(e)})"
                 }
                 logging.warning(f"gRPC call failed, using simulation: {e}")
             
@@ -219,7 +301,7 @@ class UIServer:
             log_request(logging, request.method, "/api/health")
             
             # Check gRPC server health
-            is_healthy = await self.grpc_client.health_check()
+            is_healthy = self.grpc_client.connected and await self.grpc_client.health_check()
             
             if is_healthy:
                 response_data = {

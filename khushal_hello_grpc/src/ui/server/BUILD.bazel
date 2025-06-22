@@ -11,4 +11,19 @@ py_library(
         requirement("grpcio"),
     ],
     visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "ui",
+    srcs = ["server.py"],
+    data = ["//khushal_hello_grpc/src/ui:all_static"],
+    deps = [
+        ":ui_lib",
+        "//khushal_hello_grpc/src/generated:hello_generated",
+        "//khushal_hello_grpc/src/common:common_lib",
+        requirement("aiohttp"),
+        requirement("aiohttp-cors"),
+        requirement("grpcio"),
+    ],
+    main = "server.py",
 ) 

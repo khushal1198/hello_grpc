@@ -1,15 +1,20 @@
 load("@my_pip_deps//:requirements.bzl", "requirement")
 
 exports_files([
-    "server/server.py",
     "frontend/static/index.html",
     "frontend/assets/css/style.css",
     "frontend/assets/js/client.js",
 ], visibility = ["//visibility:public"])
 
+filegroup(
+    name = "all_static",
+    srcs = glob(["frontend/static/**/*"]),
+    visibility = ["//visibility:public"],
+)
+
 py_library(
     name = "ui_lib",
-    srcs = glob(["*.py"]) + glob(["server/*.py"]) + glob(["frontend/**/*.py"]),
+    srcs = glob(["*.py"]),
     deps = [
         "//khushal_hello_grpc/src/generated:hello_generated",
         "//khushal_hello_grpc/src/common:common_lib",
@@ -18,12 +23,4 @@ py_library(
         requirement("grpcio"),
     ],
     visibility = ["//visibility:public"],
-)
-
-py_binary(
-    name = "ui_server",
-    srcs = ["server/server.py"],
-    data = glob(["frontend/**/*"]),
-    deps = [":ui_lib"],
-    main = "server/server.py",
 ) 

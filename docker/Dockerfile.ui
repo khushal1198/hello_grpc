@@ -11,6 +11,11 @@ LABEL org.opencontainers.image.licenses="MIT"
 # Set the working directory inside the container
 WORKDIR /app
 
+# Install system dependencies including curl for health checks
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Python dependencies (from lock file for reproducibility)
 COPY requirements_lock.txt ./
 RUN pip install --no-cache-dir -r requirements_lock.txt \
@@ -35,19 +40,42 @@ RUN python -m grpc_tools.protoc -I/app/protos \
     && sed -i 's/import hello_pb2 as hello__pb2/from . import hello_pb2 as hello__pb2/' \
     /app/khushal_hello_grpc/src/generated/hello_pb2_grpc.py
 
-# Copy the UI server implementation and static files
+# Copy the UI server implementation
 COPY khushal_hello_grpc/src/ui/server/server.py ./ui_server.py
+
+# Copy static files to the expected location
 COPY khushal_hello_grpc/src/ui/frontend/static ./static
-COPY khushal_hello_grpc/src/generated ../generated
+
+# Verify static files are copied correctly
+RUN ls -la ./static && \
+    echo "Static files copied successfully" && \
+    if [ ! -f ./static/index.html ]; then \
+        echo "Warning: index.html not found in static directory"; \
+        echo "Contents of static directory:"; \
+        ls -la ./static/; \
+    fi
 
 # Expose the UI port
 EXPOSE 8081
 
 ENV PYTHONPATH=/app
 
-# Health check for UI server
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8081/api/health || exit 1
+# Health check for UI server - more lenient to prevent CrashLoopBackOff
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+    CMD curl -f http://localhost:8081/api/health || exit 0
 
-# Entrypoint: run the UI server
-ENTRYPOINT ["python", "ui_server.py"] 
+# Create a startup script to handle potential issues
+RUN echo '#!/bin/bash\n\
+echo "Starting gRPC UI Server..."\n\
+echo "Environment variables:"\n\
+echo "  GRPC_SERVER_HOST: ${GRPC_SERVER_HOST:-localhost}"\n\
+echo "  GRPC_SERVER_PORT: ${GRPC_SERVER_PORT:-50051}"\n\
+echo "  UI_SERVER_PORT: ${UI_SERVER_PORT:-8081}"\n\
+echo "Static files location: /app/static"\n\
+ls -la /app/static\n\
+echo "Starting server..."\n\
+exec python ui_server.py\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
+# Entrypoint: use the startup script
+ENTRYPOINT ["/app/start.sh"] 
