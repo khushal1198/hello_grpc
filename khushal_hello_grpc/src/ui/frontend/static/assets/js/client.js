@@ -1,6 +1,6 @@
 // gRPC Web Client
 class GrpcWebClient {
-    constructor(baseUrl = 'http://localhost:8080') {
+    constructor(baseUrl = '') {
         this.baseUrl = baseUrl;
         this.connected = false;
     }
