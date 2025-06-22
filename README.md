@@ -12,6 +12,7 @@ This project is a minimal, production-grade Python gRPC service built and manage
 - gRPC service definition and code generation
 - Clean Bazel package structure
 - Robust handling of Python imports and generated code
+- **Web UI for testing gRPC calls** (see below)
 - **Containerization with Docker** (see below)
 - **Automated CI/CD with GitHub Actions** (see below)
 
@@ -29,6 +30,11 @@ bazel build //khushal_hello_grpc/src/server:hello_server
 bazel run //khushal_hello_grpc/src/server:hello_server
 ```
 
+### Run the UI client
+```sh
+bazel run //khushal_hello_grpc/src/ui:ui_server
+```
+
 ### Run tests
 ```sh
 bazel test //khushal_hello_grpc/tests:test_server
@@ -39,6 +45,49 @@ bazel test //khushal_hello_grpc/tests:test_server
 python3 -m piptools compile requirements.in --output-file=requirements_lock.txt --allow-unsafe
 ```
 > **Note:** We use `requirements_lock.txt` (not the default `requirements.txt`) to ensure fully reproducible builds for Bazel. The `--output-file` flag is required because piptools by default writes to `requirements.txt`, but Bazel bzlmod expects a lock file with a custom name. The `--allow-unsafe` flag is necessary for Bazel because some dependencies (like grpcio-tools) require "unsafe" packages (such as setuptools) to be present in the lock file.
+
+---
+
+## Web UI for Testing gRPC Calls
+
+This project includes a web-based UI that allows you to interact with your gRPC server through a browser. The UI provides:
+
+- **Real-time gRPC calls**: Send `HelloRequest` messages and receive `HelloReply` responses
+- **Server health monitoring**: Check if the gRPC server is running and healthy
+- **Beautiful interface**: Modern, responsive design with real-time status updates
+- **Connection status**: Visual indicator showing connection to the gRPC server
+
+### How to use the UI:
+
+1. **Start the gRPC server** (in one terminal):
+   ```sh
+   bazel run //khushal_hello_grpc/src/server:hello_server
+   ```
+
+2. **Start the UI server** (in another terminal):
+   ```sh
+   bazel run //khushal_hello_grpc/src/ui:ui_server
+   ```
+
+3. **Open your browser** and go to:
+   ```
+   http://localhost:8080/static/index.html
+   ```
+
+4. **Test the gRPC service**:
+   - Enter a name in the input field
+   - Click "Send Hello Request" to make a gRPC call
+   - Click "Check Server Health" to verify server status
+   - Watch the real-time response display
+
+### How the UI works:
+
+- **UI Server**: Runs on port 8080, serves static files and acts as a proxy
+- **gRPC Client**: Makes actual gRPC calls to your server on port 50051
+- **Web Interface**: Modern HTML/CSS/JS frontend with real-time updates
+- **Fallback Mode**: If gRPC server is unavailable, shows simulated responses
+
+The UI automatically detects connection status and provides helpful feedback for debugging.
 
 ---
 
@@ -134,6 +183,12 @@ hello_grpc/
 │   │   │   ├── server.py
 │   │   │   └── impl/
 │   │   │       └── service_impl.py
+│   │   ├── ui/
+│   │   │   ├── server.py
+│   │   │   └── static/
+│   │   │       ├── index.html
+│   │   │       ├── style.css
+│   │   │       └── client.js
 │   │   └── generated/
 │   │       └── (generated .py)
 │   └── tests/

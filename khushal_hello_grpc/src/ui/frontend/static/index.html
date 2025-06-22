@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gRPC Hello Client</title>
+    <link rel="stylesheet" href="/static/assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 gRPC Hello Client</h1>
+        
+        <div class="connection-info">
+            <span class="connection-status" id="connectionStatus"></span>
+            <span id="connectionText">Checking connection...</span>
+        </div>
+        
+        <div class="input-group">
+            <label for="nameInput">Enter your name:</label>
+            <input type="text" id="nameInput" placeholder="e.g., John Doe" value="World">
+        </div>
+        
+        <div class="button-group">
+            <button id="sendButton" onclick="sendHelloRequest()">Send Hello Request</button>
+            <button id="healthButton" onclick="checkHealth()">Check Server Health</button>
+            <button id="clearButton" onclick="clearResponse()">Clear Response</button>
+        </div>
+        
+        <div class="response-area">
+            <div class="response-title">Server Response:</div>
+            <div class="response-content" id="responseContent">No response yet. Click a button to make a request.</div>
+        </div>
+        
+        <div class="status" id="status" style="display: none;"></div>
+    </div>
+
+    <script src="/static/assets/js/client.js"></script>
+</body>
+</html> 

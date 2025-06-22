@@ -9,4 +9,6 @@ requests
 grpcio
 grpcio-tools
 grpcio-health-checking
-pytest 
+pytest
+aiohttp
+aiohttp-cors 
