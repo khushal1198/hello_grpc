@@ -1,0 +1,11 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "storage_lib",
+    srcs = glob(["*.py"]),
+    imports = ["common/storage"],
+    deps = [
+        requirement("psycopg2-binary"),
+    ],
+    visibility = ["//visibility:public"],
+) 

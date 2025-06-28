@@ -8,7 +8,7 @@
 # - **Examples from this project:**
 #     - //khushal_hello_grpc/src/generated:hello_generated (py_library) wraps the generated proto code.
 #     - //khushal_hello_grpc/src/server/impl:impl_lib depends on :hello_generated.
-#     - //khushal_hello_grpc/src/server:server_lib depends on //khushal_hello_grpc/src/server/impl:impl_lib.
+#     - //khushal_hello_grpc/src/server/impl:server_lib depends on //khushal_hello_grpc/src/server/impl:impl_lib.
 #     - //khushal_hello_grpc/src/server:hello_server (py_binary) depends on :server_lib.
 #     - //khushal_hello_grpc/tests:test_server (py_test) depends on //khushal_hello_grpc/src/server/impl:impl_lib and //khushal_hello_grpc/src/generated:hello_generated.
 # - All of these are "downstream" of the genrule because they (directly or indirectly) depend on the generated code.
@@ -52,6 +52,15 @@
 
 load("@my_pip_deps//:requirements.bzl", "requirement")
 
+py_binary(
+    name = "generate_grpc_tool",
+    srcs = ["generate_grpc.py"],
+    main = "generate_grpc.py",
+    deps = [
+        requirement("grpcio-tools"),
+    ],
+)
+
 genrule(
     name = "generate_hello_grpc",
     srcs = ["//protos:hello.proto"],
@@ -60,8 +69,8 @@ genrule(
         "hello_pb2_grpc.py",
         "__init__.py",
     ],
-    cmd = "touch $(@D)/__init__.py && cp $(location //protos:hello.proto) $(@D)/hello.proto && cd $(@D) && python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. hello.proto && sed -i '' 's/import hello_pb2 as hello__pb2/from . import hello_pb2 as hello__pb2/' hello_pb2_grpc.py",
-    tools = [requirement("grpcio-tools")],
+    cmd = "$(location :generate_grpc_tool) $(location //protos:hello.proto) $(@D)",
+    tools = [":generate_grpc_tool"],
 )
 
 py_library(

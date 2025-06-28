@@ -5,10 +5,19 @@
 # Bazel bzlmod does NOT currently support dynamic selection of separate requirements files per platform.
 # If you use separate files (e.g., requirements_mac.in, requirements_linux.in), you must manually update MODULE.bazel to point to the correct lock file before building on each platform.
 
+# Core gRPC dependencies
 requests
 grpcio
 grpcio-tools
 grpcio-health-checking
-pytest
+
+# Web server for UI
 aiohttp
-aiohttp-cors 
+aiohttp-cors
+
+# PostgreSQL database connectivity
+psycopg2-binary
+sqlalchemy  # For enhanced connection pooling and management
+
+# Testing
+pytest 

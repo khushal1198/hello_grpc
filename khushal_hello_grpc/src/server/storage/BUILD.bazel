@@ -1,0 +1,9 @@
+py_library(
+    name = "storage_lib",
+    srcs = glob(["*.py"]),
+    deps = [
+        "//khushal_hello_grpc/src/common/storage:storage_lib",
+        "//khushal_hello_grpc/src/server/models:models_lib",
+    ],
+    visibility = ["//visibility:public"],
+) 

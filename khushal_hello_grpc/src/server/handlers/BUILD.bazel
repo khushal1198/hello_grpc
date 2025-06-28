@@ -1,0 +1,8 @@
+py_library(
+    name = "handlers_lib",
+    srcs = glob(["*.py"]),
+    deps = [
+        "//khushal_hello_grpc/src/server/storage:storage_lib",
+    ],
+    visibility = ["//visibility:public"],
+) 

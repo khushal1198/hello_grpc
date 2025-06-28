@@ -55,6 +55,8 @@ protobuf==5.29.4
     # via
     #   grpcio-health-checking
     #   grpcio-tools
+psycopg2-binary==2.9.10
+    # via -r requirements.in
 pytest==8.3.5
     # via -r requirements.in
 requests==2.32.3
