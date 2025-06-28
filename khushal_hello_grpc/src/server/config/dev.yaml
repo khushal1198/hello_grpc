@@ -1,0 +1,14 @@
+# Test Environment Configuration
+# PostgreSQL database configuration for development
+
+database:
+  host: "shivi.local"
+  port: 32543
+  user: "test_user"
+  password: "test123"
+  database: "myapp"
+  schema: "test"
+  pool:
+    size: 15
+    max_overflow: 3
+    timeout: 30

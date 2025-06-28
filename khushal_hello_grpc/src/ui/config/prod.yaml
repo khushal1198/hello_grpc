@@ -1,0 +1,19 @@
+# UI Service - Production Environment Configuration
+# PostgreSQL database configuration for Kubernetes deployment
+
+database:
+  host: "postgresql-service"            # Kubernetes PostgreSQL service name
+  port: 5432
+  user: "prod_user"                     # Production DB user
+  password: "prod123"                   # Production DB password
+  database: "myapp"                     # Production database name
+  schema: "prod"                        # Production schema
+  pool:
+    size: 25                            # Larger pool for production
+    max_overflow: 10                    # More overflow connections
+    timeout: 60                         # Longer timeout for production
+
+# Notes:
+# - This assumes PostgreSQL runs as a Kubernetes service named "postgresql-service"
+# - In production, consider using environment variables for sensitive values
+# - Database credentials should be managed via Kubernetes secrets 

@@ -1,5 +1,8 @@
 py_library(
     name = "common_lib",
     srcs = glob(["*.py"]),
+    deps = [
+        "//khushal_hello_grpc/src/common/utils:utils",
+    ],
     visibility = ["//visibility:public"],
 ) 

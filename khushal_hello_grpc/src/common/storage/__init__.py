@@ -5,34 +5,44 @@ Provides generic DatabaseStore interface, specific implementations, and distribu
 Features both simple and production-ready PostgreSQL implementations.
 """
 
-from .database import DatabaseStore, PostgresConnectionPool as SimplePostgresConnectionPool, retry
+# Core database operations
+from khushal_hello_grpc.src.common.storage.database import DatabaseStore, PostgresConnectionPool as SimplePostgresConnectionPool, retry
 
-# Import advanced PostgreSQL implementation if available
+# Try enhanced PostgreSQL features (SQLAlchemy, etc.)
 try:
-    from .postgres import (
-        PostgresConnectionPool, PostgresConnection, PostgresCursor,
-        StatementExecutor, PostgresUpdateNode, UpdateStatementInput,
+    from khushal_hello_grpc.src.common.storage.postgres import (
+        PostgresConnectionPool,
         create_postgres_pool
     )
-    ADVANCED_POSTGRES_AVAILABLE = True
-except ImportError:
-    ADVANCED_POSTGRES_AVAILABLE = False
+    ENHANCED_POSTGRES_AVAILABLE = True
+except ImportError as e:
+    # Log what's missing
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.debug(f"Enhanced PostgreSQL features not available: {e}")
+    
+    # Create stub implementations
     PostgresConnectionPool = None
-    PostgresConnection = None
-    PostgresCursor = None
-    StatementExecutor = None
-    PostgresUpdateNode = None
-    UpdateStatementInput = None
     create_postgres_pool = None
+    ENHANCED_POSTGRES_AVAILABLE = False
 
-from .models import (
-    ConnectionPool, Storable, DatabaseType, 
+# Storage models and utilities  
+from khushal_hello_grpc.src.common.storage.models import (
+    Storable,
+    ConnectionPool
+)
+
+# Distributed locking
+from khushal_hello_grpc.src.common.storage.lock_manager import (
+    DistributedLockManager,
+    PostgresLockManager,
+    create_lock_manager
+)
+
+from khushal_hello_grpc.src.common.storage.models import (
+    DatabaseType, 
     PostgresConfig, DatabaseConfig, AdditionalFilter,
     CREATED_TS_FIELD, ID_FIELD, LAST_UPDATED_TS_FIELD
-)
-from .lock_manager import (
-    DistributedLockManager, PostgresLockManager, InMemoryLockManager, 
-    create_lock_manager
 )
 
 __all__ = [
@@ -51,18 +61,12 @@ __all__ = [
     
     # Advanced PostgreSQL (if available)
     "PostgresConnectionPool",
-    "PostgresConnection",
-    "PostgresCursor", 
-    "StatementExecutor",
-    "PostgresUpdateNode",
-    "UpdateStatementInput",
     "create_postgres_pool",
-    "ADVANCED_POSTGRES_AVAILABLE",
+    "ENHANCED_POSTGRES_AVAILABLE",
     
     # Distributed locking
     "DistributedLockManager",
     "PostgresLockManager", 
-    "InMemoryLockManager",
     "create_lock_manager",
     
     # Utilities

@@ -33,7 +33,7 @@ except ImportError:
     pool = None
     PGDialect_psycopg2 = None
 
-from .models import (
+from khushal_hello_grpc.src.common.storage.models import (
     AdditionalFilter,
     ConnectionPool,
     ConnectionProto,

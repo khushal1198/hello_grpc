@@ -1,8 +1,8 @@
 """
-Server-specific data models for the gRPC service.
+Server-specific data models for gRPC requests.
 """
 
-from .grpc_models import GrpcRequest
+from khushal_hello_grpc.src.server.models.grpc_models import GrpcRequest
 
 __all__ = [
     "GrpcRequest"

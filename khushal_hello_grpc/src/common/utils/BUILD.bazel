@@ -1,0 +1,8 @@
+py_library(
+    name = "utils",
+    srcs = [
+        "__init__.py",
+        "env.py",
+    ],
+    visibility = ["//khushal_hello_grpc/src:__subpackages__"],
+) 

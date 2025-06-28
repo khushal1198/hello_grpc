@@ -1,8 +1,8 @@
 """
-Server request handlers for processing gRPC requests.
+Request handler exports for the gRPC server.
 """
 
-from .request_handler import RequestHandler
+from khushal_hello_grpc.src.server.handlers.request_handler import RequestHandler
 
 __all__ = [
     "RequestHandler"

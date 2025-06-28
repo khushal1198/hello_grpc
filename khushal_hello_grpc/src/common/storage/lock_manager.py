@@ -1,12 +1,18 @@
+"""
+Distributed lock manager using PostgreSQL advisory locks.
+Provides simple and advanced locking strategies for coordinating access.
+"""
+
 import hashlib
 import logging
 import threading
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Dict, Generator, Union, Callable, Any
+from contextlib import contextmanager
 
-from .models import ConnectionPool
+from khushal_hello_grpc.src.common.storage.models import ConnectionPool
 
 logger = logging.getLogger(__name__)
 

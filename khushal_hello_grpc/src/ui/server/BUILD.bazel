@@ -6,6 +6,7 @@ py_library(
     deps = [
         "//khushal_hello_grpc/src/generated:hello_generated",
         "//khushal_hello_grpc/src/common:common_lib",
+        "//khushal_hello_grpc/src/ui/config:config",
         requirement("aiohttp"),
         requirement("aiohttp-cors"),
         requirement("grpcio"),
@@ -21,6 +22,7 @@ py_binary(
         ":ui_lib",
         "//khushal_hello_grpc/src/generated:hello_generated",
         "//khushal_hello_grpc/src/common:common_lib",
+        "//khushal_hello_grpc/src/ui/config:config",
         requirement("aiohttp"),
         requirement("aiohttp-cors"),
         requirement("grpcio"),

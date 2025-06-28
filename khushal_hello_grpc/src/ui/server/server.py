@@ -23,13 +23,22 @@ from khushal_hello_grpc.src.generated import hello_pb2
 from khushal_hello_grpc.src.generated import hello_pb2_grpc
 from khushal_hello_grpc.src.common.logging_config import setup_root_logging, log_request
 
+# Import UI service configuration
+from khushal_hello_grpc.src.ui.config import get_config
+
 # Configure root logging so logging.info(), logging.debug(), etc. can be used directly
 setup_root_logging(level=logging.DEBUG)
 
-# Configuration - use environment variables for containerized environments
+# Get configuration
+config = get_config()
+
+# Configuration - can be enhanced with config system later
 GRPC_SERVER_HOST = os.getenv("GRPC_SERVER_HOST", "localhost")
 GRPC_SERVER_PORT = int(os.getenv("GRPC_SERVER_PORT", "50051"))
 UI_SERVER_PORT = int(os.getenv("UI_SERVER_PORT", "8081"))
+
+# Database is available via: config.database.url
+logging.info(f"UI Server config loaded - Database available at: {config.database.host}:{config.database.port}")
 
 class GrpcClient:
     """gRPC client for communicating with the Hello service"""

@@ -12,7 +12,11 @@ from grpc_health.v1 import health
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 
-# Configure logging
+# Import typed configuration system and stage management
+from khushal_hello_grpc.src.server.config import get_config
+from khushal_hello_grpc.src.common.utils import Stage, get_stage
+
+# Configure basic logging (will enhance later)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -20,7 +24,8 @@ logging.basicConfig(
 
 # Import PostgreSQL connection pool and storage factory
 from khushal_hello_grpc.src.common.storage import (
-    ADVANCED_POSTGRES_AVAILABLE,
+    ENHANCED_POSTGRES_AVAILABLE,
+    PostgresConnectionPool,
     create_postgres_pool,
     SimplePostgresConnectionPool
 )
@@ -66,8 +71,9 @@ def signal_handler(signum, frame):
 
 def status_logger():
     """Log server status every 10 seconds"""
+    server_port = 50051  # Hardcoded for now
     while True:
-        logger.info("gRPC server running on port 50051... (Ctrl+C to stop)")
+        logger.info(f"gRPC server running on port {server_port}... (Ctrl+C to stop)")
         time.sleep(10)
 
 def serve():
@@ -78,14 +84,22 @@ def serve():
     signal.signal(signal.SIGTERM, signal_handler)
     
     try:
-        logger.info("Starting gRPC server with Handler pattern architecture...")
+        # Get current stage and typed configuration
+        stage = get_stage()
+        config = get_config()
         
-        # Configuration from environment
-        database_url = os.getenv(
-            "DATABASE_URL",
-            "postgresql://test_user:test123@shivi.local:32543/myapp"
-        )
-        schema = os.getenv("DATABASE_SCHEMA", "test")
+        logger.info(f"Starting gRPC server with Handler pattern architecture (stage: {stage})...")
+        
+        # Extract database configuration with full type safety
+        database_url = config.database.url
+        schema = config.database.schema
+        pool_size = config.database.pool.size
+        max_overflow = config.database.pool.max_overflow
+        
+        # Hardcoded server settings for now
+        server_port = 50051
+        server_workers = 10
+        server_host = "[::]"
         
         logger.info(f"Connecting to database: {database_url.replace(database_url.split('@')[0].split('//')[-1], '***')}")
         logger.info(f"Using schema: {schema}")
@@ -94,13 +108,13 @@ def serve():
         logger.info("Creating PostgreSQL connection pool...")
         
         # Try advanced implementation first
-        if ADVANCED_POSTGRES_AVAILABLE and create_postgres_pool:
+        if ENHANCED_POSTGRES_AVAILABLE and create_postgres_pool:
             try:
                 connection_pool = create_postgres_pool(
                     database_url=database_url,
                     schema=schema,
-                    pool_size=15,
-                    max_overflow=3
+                    pool_size=pool_size,
+                    max_overflow=max_overflow
                 )
                 if connection_pool:
                     logger.info("Using advanced PostgreSQL connection pool with SQLAlchemy")
@@ -134,11 +148,11 @@ def serve():
         hello_service = HelloService(request_handler=request_handler)
         
         # Step 5: Create gRPC server
-        logger.info("Creating gRPC server with 10 worker threads...")
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        logger.info(f"Creating gRPC server with {server_workers} worker threads...")
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=server_workers))
         hello_pb2_grpc.add_HelloServiceServicer_to_server(hello_service, server)
         
-        # Add gRPC health checking
+        # Add gRPC health checking (enabled for now)
         logger.info("Adding health check service...")
         health_servicer = health.HealthServicer()
         health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
@@ -146,7 +160,7 @@ def serve():
         health_servicer.set('', health_pb2.HealthCheckResponse.SERVING)
         health_servicer.set('HelloService', health_pb2.HealthCheckResponse.SERVING)
         
-        server.add_insecure_port('[::]:50051')
+        server.add_insecure_port(f'{server_host}:{server_port}')
         
         # Start status logger in background thread
         status_thread = threading.Thread(target=status_logger, daemon=True)
@@ -154,7 +168,7 @@ def serve():
         
         logger.info("gRPC server ready with Handler pattern architecture!")
         logger.info("Architecture: Server → Storage → RequestHandler → HelloService → gRPC")
-        logger.info("Server listening on port 50051...")
+        logger.info(f"Server listening on {server_host}:{server_port}...")
         server.start()
         
         try:

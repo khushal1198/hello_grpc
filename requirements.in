@@ -19,5 +19,9 @@ aiohttp-cors
 psycopg2-binary
 sqlalchemy  # For enhanced connection pooling and management
 
+# Configuration management
+pyyaml
+pydantic  # For typed configuration classes
+
 # Testing
 pytest 
