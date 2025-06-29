@@ -23,5 +23,8 @@ sqlalchemy  # For enhanced connection pooling and management
 pyyaml
 pydantic  # For typed configuration classes
 
+# Observability and monitoring
+prometheus_client  # For metrics collection and export
+
 # Testing
 pytest 

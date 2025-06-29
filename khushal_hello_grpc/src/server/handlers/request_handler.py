@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from khushal_hello_grpc.src.server.storage import GrpcStore
+from khushal_hello_grpc.src.common.metrics import track_metrics, track_database_operation
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,13 @@ class RequestHandler:
         :param grpc_store: Storage instance for persisting requests
         """
         self.grpc_store = grpc_store
-        logger.info("RequestHandler initialized with storage backend")
+        logger.info("RequestHandler initialized with storage backend and Prometheus metrics")
     
+    @track_metrics("SayHello")
     def handle_say_hello(self, request, context) -> str:
         """
         Handle SayHello gRPC requests with full logging and storage.
+        Clean and simple - metrics are handled by the decorator.
         
         :param request: gRPC HelloRequest
         :param context: gRPC context with metadata
@@ -55,6 +58,15 @@ class RequestHandler:
         logger.debug(f"Request [{request_id}] generated response: '{response_message}'")
         
         # Store the request asynchronously (don't block response)
+        self._store_request_async(request_id, name, response_message, peer_info, metadata_info)
+        
+        logger.info(f"Request [{request_id}] completed successfully")
+        return response_message
+    
+    @track_database_operation("insert", "grpc_requests")
+    def _store_request_async(self, request_id: str, name: str, response_message: str, 
+                           peer_info: str, metadata_info: Dict[str, Any]):
+        """Store request data - metrics tracked by decorator"""
         try:
             storage_metadata = self._build_storage_metadata(
                 request_id, name, response_message, peer_info, metadata_info
@@ -68,16 +80,15 @@ class RequestHandler:
             
             if record_id:
                 logger.info(f"Request [{request_id}] stored in database with ID: {record_id}")
+                return record_id
             else:
                 logger.warning(f"Request [{request_id}] failed to store in database")
+                return None
+                
         except Exception as e:
             logger.error(f"Request [{request_id}] database error: {e}")
             # Continue processing - don't fail the request due to storage issues
-        
-        # Log completion
-        logger.info(f"Request [{request_id}] completed successfully")
-        
-        return response_message
+            raise
     
     def _extract_peer_info(self, context) -> str:
         """Extract peer information from gRPC context"""
@@ -160,7 +171,9 @@ class RequestHandler:
     def get_stats(self) -> Dict[str, Any]:
         """Get handler statistics"""
         try:
-            return self.grpc_store.get_request_stats()
+            stats = self.grpc_store.get_request_stats()
+            
+            return stats
         except Exception as e:
             logger.error(f"Failed to get stats: {e}")
             return {"error": str(e)} 

@@ -90,19 +90,13 @@ def serve():
         
         logger.info(f"Starting gRPC server with Handler pattern architecture (stage: {stage})...")
         
-        # Extract database configuration with full type safety
-        database_url = config.database.url
-        schema = config.database.schema
-        pool_size = config.database.pool.size
-        max_overflow = config.database.pool.max_overflow
-        
         # Hardcoded server settings for now
         server_port = 50051
         server_workers = 10
         server_host = "[::]"
         
-        logger.info(f"Connecting to database: {database_url.replace(database_url.split('@')[0].split('//')[-1], '***')}")
-        logger.info(f"Using schema: {schema}")
+        logger.info(f"Connecting to database: {config.database.url.replace(config.database.url.split('@')[0].split('//')[-1], '***')}")
+        logger.info(f"Using schema: {config.database.schema}")
         
         # Step 1: Create PostgreSQL connection pool using storage layer factories
         logger.info("Creating PostgreSQL connection pool...")
@@ -111,10 +105,10 @@ def serve():
         if ENHANCED_POSTGRES_AVAILABLE and create_postgres_pool:
             try:
                 connection_pool = create_postgres_pool(
-                    database_url=database_url,
-                    schema=schema,
-                    pool_size=pool_size,
-                    max_overflow=max_overflow
+                    database_url=config.database.url,
+                    schema=config.database.schema,
+                    pool_size=config.database.pool.size,
+                    max_overflow=config.database.pool.max_overflow
                 )
                 if connection_pool:
                     logger.info("Using advanced PostgreSQL connection pool with SQLAlchemy")
@@ -123,15 +117,15 @@ def serve():
             except Exception as e:
                 logger.warning(f"Advanced PostgreSQL pool failed, falling back to simple: {e}")
                 connection_pool = SimplePostgresConnectionPool(
-                    database_url=database_url,
-                    schema=schema
+                    database_url=config.database.url,
+                    schema=config.database.schema
                 )
                 logger.info("Using simple PostgreSQL connection pool")
         else:
             # Use simple implementation
             connection_pool = SimplePostgresConnectionPool(
-                database_url=database_url,
-                schema=schema
+                database_url=config.database.url,
+                schema=config.database.schema
             )
             logger.info("Using simple PostgreSQL connection pool")
         

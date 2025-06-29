@@ -49,6 +49,8 @@ packaging==25.0
     # via pytest
 pluggy==1.5.0
     # via pytest
+prometheus-client==0.22.1
+    # via -r requirements.in
 propcache==0.3.2
     # via
     #   aiohttp

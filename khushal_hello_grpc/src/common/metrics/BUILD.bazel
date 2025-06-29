@@ -1,0 +1,10 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "metrics",
+    srcs = glob(["*.py"]),
+    visibility = ["//khushal_hello_grpc/src:__subpackages__"],
+    deps = [
+        requirement("prometheus_client"),
+    ],
+) 

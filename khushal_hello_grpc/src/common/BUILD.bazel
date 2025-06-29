@@ -3,6 +3,7 @@ py_library(
     srcs = glob(["*.py"]),
     deps = [
         "//khushal_hello_grpc/src/common/utils:utils",
+        "//khushal_hello_grpc/src/common/metrics:metrics",
     ],
     visibility = ["//visibility:public"],
 ) 
