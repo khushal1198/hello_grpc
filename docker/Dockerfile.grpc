@@ -44,6 +44,7 @@ COPY khushal_hello_grpc/src/generated ../generated
 EXPOSE 50051
 
 ENV PYTHONPATH=/app
+ENV APP_ENV=PROD
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \

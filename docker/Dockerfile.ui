@@ -59,6 +59,7 @@ RUN ls -la ./static && \
 EXPOSE 8081
 
 ENV PYTHONPATH=/app
+ENV APP_ENV=PROD
 
 # Health check for UI server - more lenient to prevent CrashLoopBackOff
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
@@ -71,6 +72,7 @@ echo "Environment variables:"\n\
 echo "  GRPC_SERVER_HOST: ${GRPC_SERVER_HOST:-localhost}"\n\
 echo "  GRPC_SERVER_PORT: ${GRPC_SERVER_PORT:-50051}"\n\
 echo "  UI_SERVER_PORT: ${UI_SERVER_PORT:-8081}"\n\
+echo "  APP_ENV: ${APP_ENV:-DEV}"\n\
 echo "Static files location: /app/static"\n\
 ls -la /app/static\n\
 echo "Starting server..."\n\
