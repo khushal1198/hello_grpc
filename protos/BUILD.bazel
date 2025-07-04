@@ -1,9 +1,17 @@
 # This proto_library exposes the .proto files for use by other Bazel targets.
 # The genrule in khushal_hello_grpc/src/generated/ picks up these protos and generates Python code from them at build time.
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
 proto_library(
     name = "hello_proto",
-    srcs = glob(["*.proto"]),
+    srcs = ["hello.proto"],
     visibility = ["//visibility:public"],
 )
 
-exports_files(["hello.proto"], visibility = ["//visibility:public"]) 
+proto_library(
+    name = "user_proto",
+    srcs = ["user.proto"],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(["hello.proto", "user.proto"], visibility = ["//visibility:public"]) 

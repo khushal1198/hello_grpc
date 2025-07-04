@@ -1,0 +1,24 @@
+# User Service - Production Environment Configuration
+
+database:
+  host: "postgresql.postgres"  # Correct service name with namespace
+  port: 5432
+  user: "prod_user"
+  password: "prod123"  # Should use Kubernetes secrets in production
+  database: "myapp"
+  schema: "prod"
+  pool:
+    size: 25
+    max_overflow: 10
+    timeout: 60
+
+jwt:
+  secret_key: "prod-secret-key-change-in-production"  # Should use Kubernetes secrets
+  algorithm: "HS256"
+  access_token_expire_minutes: 30
+  refresh_token_expire_days: 7
+
+# Notes:
+# - PostgreSQL service runs in 'postgres' namespace
+# - Database credentials should be managed via Kubernetes secrets
+# - JWT secret should be managed via Kubernetes secrets 

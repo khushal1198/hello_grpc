@@ -1,0 +1,19 @@
+# User Service - Development Environment Configuration
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "dev_user"
+  password: "dev123"
+  database: "myapp"
+  schema: "test"
+  pool:
+    size: 15
+    max_overflow: 3
+    timeout: 30
+
+jwt:
+  secret_key: "dev-secret-key-change-in-production"
+  algorithm: "HS256"
+  access_token_expire_minutes: 30
+  refresh_token_expire_days: 7 

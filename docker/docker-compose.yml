@@ -19,6 +19,24 @@ services:
     networks:
       - hello-grpc-network
 
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.user
+    ports:
+      - "50052:50052"
+    environment:
+      - PYTHONPATH=/app
+      - APP_ENV=PROD
+    healthcheck:
+      test: ["CMD", "python", "-c", "import grpc; grpc.insecure_channel('localhost:50052').connect()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - hello-grpc-network
+
   ui-server:
     build:
       context: .
@@ -29,10 +47,14 @@ services:
       - PYTHONPATH=/app
       - GRPC_SERVER_HOST=grpc-server
       - GRPC_SERVER_PORT=50051
+      - USER_SERVICE_HOST=user-service
+      - USER_SERVICE_PORT=50052
       - UI_SERVER_PORT=8081
       - APP_ENV=PROD
     depends_on:
       grpc-server:
+        condition: service_healthy
+      user-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/api/health"]

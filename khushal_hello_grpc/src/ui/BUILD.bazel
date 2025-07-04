@@ -1,11 +1,21 @@
 load("@my_pip_deps//:requirements.bzl", "requirement")
 
-exports_files([
-    "frontend/static/index.html",
-    "frontend/assets/css/style.css",
-    "frontend/assets/js/client.js",
-], visibility = ["//visibility:public"])
+py_binary(
+    name = "ui_server",
+    srcs = ["main.py"],
+    main = "main.py",
+    deps = [
+        "//khushal_hello_grpc/src/ui/server:ui_server_lib",
+        "//khushal_hello_grpc/src/ui/config:config",
+        "//khushal_hello_grpc/src/generated:generated",
+        requirement("grpcio"),
+        requirement("aiohttp"),
+        requirement("aiohttp-cors"),
+    ],
+    visibility = ["//visibility:public"],
+)
 
+# Export all static files for other packages to use
 filegroup(
     name = "all_static",
     srcs = glob(["frontend/static/**/*"]),
@@ -16,7 +26,7 @@ py_library(
     name = "ui_lib",
     srcs = glob(["*.py"]),
     deps = [
-        "//khushal_hello_grpc/src/generated:hello_generated",
+        "//khushal_hello_grpc/src/generated:generated",
         "//khushal_hello_grpc/src/common:common_lib",
         requirement("aiohttp"),
         requirement("aiohttp-cors"),

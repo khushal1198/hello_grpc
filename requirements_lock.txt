@@ -18,6 +18,8 @@ annotated-types==0.7.0
     # via pydantic
 attrs==25.3.0
     # via aiohttp
+bcrypt==4.3.0
+    # via -r requirements.in
 certifi==2025.4.26
     # via requests
 charset-normalizer==3.4.2
@@ -65,6 +67,8 @@ pydantic==2.11.7
     # via -r requirements.in
 pydantic-core==2.33.2
     # via pydantic
+pyjwt==2.10.1
+    # via -r requirements.in
 pytest==8.3.5
     # via -r requirements.in
 pyyaml==6.0.2

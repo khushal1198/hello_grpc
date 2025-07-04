@@ -56,11 +56,17 @@ def main():
             with open(grpc_file, 'r') as f:
                 content = f.read()
             
-            # Fix the import
-            content = content.replace(
-                'import hello_pb2 as hello__pb2',
-                'from . import hello_pb2 as hello__pb2'
-            )
+            # Fix the imports for both hello and user services
+            if 'hello.proto' in proto_name:
+                content = content.replace(
+                    'import hello_pb2 as hello__pb2',
+                    'from . import hello_pb2 as hello__pb2'
+                )
+            elif 'user.proto' in proto_name:
+                content = content.replace(
+                    'import user_pb2 as user__pb2',
+                    'from . import user_pb2 as user__pb2'
+                )
             
             with open(grpc_file, 'w') as f:
                 f.write(content)

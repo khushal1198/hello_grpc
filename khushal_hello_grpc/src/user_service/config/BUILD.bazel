@@ -1,0 +1,16 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "config",
+    srcs = ["__init__.py"],
+    data = [
+        "dev.yaml",
+        "prod.yaml",
+    ],
+    deps = [
+        "//khushal_hello_grpc/src/common/utils:utils",
+        requirement("pyyaml"),
+        requirement("pydantic"),
+    ],
+    visibility = ["//visibility:public"],
+) 

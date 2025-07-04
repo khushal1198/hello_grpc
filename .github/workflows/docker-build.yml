@@ -43,6 +43,17 @@ jobs:
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
 
+    - name: Extract metadata for User service
+      id: meta-user
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-user
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
     - name: Extract metadata for UI server
       id: meta-ui
       uses: docker/metadata-action@v5
@@ -62,6 +73,17 @@ jobs:
         push: true
         tags: ${{ steps.meta-grpc.outputs.tags }}
         labels: ${{ steps.meta-grpc.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push User service image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/Dockerfile.user
+        push: true
+        tags: ${{ steps.meta-user.outputs.tags }}
+        labels: ${{ steps.meta-user.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -86,32 +108,38 @@ jobs:
         cd manifests-repo
         # Get the SHA tags from the metadata action outputs
         GRPC_SHA_TAG=$(echo "${{ steps.meta-grpc.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
+        USER_SHA_TAG=$(echo "${{ steps.meta-user.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
         UI_SHA_TAG=$(echo "${{ steps.meta-ui.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
         
-        if [ -z "$GRPC_SHA_TAG" ] || [ -z "$UI_SHA_TAG" ]; then
+        if [ -z "$GRPC_SHA_TAG" ] || [ -z "$USER_SHA_TAG" ] || [ -z "$UI_SHA_TAG" ]; then
           echo "Error: Could not find SHA tags in metadata output"
           exit 1
         fi
         
         echo "Updating gRPC deployment with tag: ${GRPC_SHA_TAG}"
+        echo "Updating User service deployment with tag: ${USER_SHA_TAG}"
         echo "Updating UI deployment with tag: ${UI_SHA_TAG}"
         
         # Update gRPC server deployment
         sed -i "s|image: ghcr.io/khushal1198/hello_grpc-grpc:.*|image: ghcr.io/khushal1198/hello_grpc-grpc:${GRPC_SHA_TAG}|" hello-grpc/grpc-deployment.yaml
         
+        # Update User service deployment
+        sed -i "s|image: ghcr.io/khushal1198/hello_grpc-user:.*|image: ghcr.io/khushal1198/hello_grpc-user:${USER_SHA_TAG}|" hello-grpc/user-deployment.yaml
+        
         # Update UI server deployment
         sed -i "s|image: ghcr.io/khushal1198/hello_grpc-ui:.*|image: ghcr.io/khushal1198/hello_grpc-ui:${UI_SHA_TAG}|" hello-grpc/ui-deployment.yaml
         
-        echo "Updated deployment manifests with tags: gRPC=${GRPC_SHA_TAG}, UI=${UI_SHA_TAG}"
+        echo "Updated deployment manifests with tags: gRPC=${GRPC_SHA_TAG}, User=${USER_SHA_TAG}, UI=${UI_SHA_TAG}"
 
     - name: Commit and push to manifests repository
       run: |
         cd manifests-repo
         GRPC_SHA_TAG=$(echo "${{ steps.meta-grpc.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
+        USER_SHA_TAG=$(echo "${{ steps.meta-user.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
         UI_SHA_TAG=$(echo "${{ steps.meta-ui.outputs.tags }}" | grep -o "master-[a-f0-9]*" | head -1)
         
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add hello-grpc/grpc-deployment.yaml hello-grpc/ui-deployment.yaml
-        git commit -m "Auto-update hello-grpc deployments: gRPC=${GRPC_SHA_TAG}, UI=${UI_SHA_TAG}" || exit 0
+        git add hello-grpc/grpc-deployment.yaml hello-grpc/user-deployment.yaml hello-grpc/ui-deployment.yaml
+        git commit -m "Auto-update hello-grpc deployments: gRPC=${GRPC_SHA_TAG}, User=${USER_SHA_TAG}, UI=${UI_SHA_TAG}" || exit 0
         git push origin main 

@@ -1,10 +1,10 @@
 load("@my_pip_deps//:requirements.bzl", "requirement")
 
 py_library(
-    name = "ui_lib",
+    name = "ui_server_lib",
     srcs = glob(["*.py"]),
     deps = [
-        "//khushal_hello_grpc/src/generated:hello_generated",
+        "//khushal_hello_grpc/src/generated:generated",
         "//khushal_hello_grpc/src/common:common_lib",
         "//khushal_hello_grpc/src/ui/config:config",
         requirement("aiohttp"),
@@ -15,17 +15,18 @@ py_library(
 )
 
 py_binary(
-    name = "ui",
+    name = "ui_server",
     srcs = ["server.py"],
+    main = "server.py",
     data = ["//khushal_hello_grpc/src/ui:all_static"],
     deps = [
-        ":ui_lib",
-        "//khushal_hello_grpc/src/generated:hello_generated",
+        ":ui_server_lib",
+        "//khushal_hello_grpc/src/generated:generated",
         "//khushal_hello_grpc/src/common:common_lib",
         "//khushal_hello_grpc/src/ui/config:config",
         requirement("aiohttp"),
         requirement("aiohttp-cors"),
         requirement("grpcio"),
     ],
-    main = "server.py",
+    visibility = ["//visibility:public"],
 ) 

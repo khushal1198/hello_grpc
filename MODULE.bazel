@@ -8,7 +8,7 @@
 # Use bazel_dep to specify the exact dependency and its version for Bazel extensions.
 # Here, we add the rules_python Bazel extension for Python support and pip integration.
 bazel_dep(name = "rules_python", version = "0.40.0")
-# bazel_dep(name = "rules_proto", version = "6.0.0")
+bazel_dep(name = "rules_proto", version = "6.0.0")
 
 # use_extension loads a Bazel extension, making its functions available in this module.
 # Here, we load the rules_python extension to configure the Python toolchain.

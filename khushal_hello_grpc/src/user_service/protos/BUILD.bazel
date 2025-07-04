@@ -1,0 +1,14 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_grpc_library")
+
+proto_library(
+    name = "user_proto",
+    srcs = ["user.proto"],
+    visibility = ["//visibility:public"],
+)
+
+py_grpc_library(
+    name = "user_py_grpc",
+    srcs = [":user_proto"],
+    deps = [":user_proto"],
+) 

@@ -2,12 +2,10 @@ load("@my_pip_deps//:requirements.bzl", "requirement")
 
 py_library(
     name = "impl_lib",
-    srcs = ["service_impl.py", "__init__.py"],
-    imports = ["server/impl"],
+    srcs = glob(["*.py"]),
     deps = [
         "//khushal_hello_grpc/src/generated:generated",
-        "//khushal_hello_grpc/src/common/storage:storage_lib",
-        "//khushal_hello_grpc/src/server/handlers:handlers_lib",
+        "//khushal_hello_grpc/src/user_service/handlers:handlers_lib",
         requirement("grpcio"),
     ],
     visibility = ["//visibility:public"],

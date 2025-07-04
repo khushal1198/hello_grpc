@@ -5,9 +5,10 @@ py_test(
     srcs = ["test_server.py"],
     deps = [
         "//khushal_hello_grpc/src/server/impl:impl_lib",
-        "//khushal_hello_grpc/src/generated:hello_generated",
-        requirement("grpcio-health-checking"),
+        "//khushal_hello_grpc/src/generated:generated",
+        "//khushal_hello_grpc/src/common:common_lib",
         requirement("grpcio"),
+        requirement("grpcio-health-checking"),
     ],
 )
 
@@ -15,11 +16,30 @@ py_test(
     name = "test_ui_server",
     srcs = ["ui/test_ui_server.py"],
     deps = [
-        "//khushal_hello_grpc/src/ui/server:ui_lib",
-        "//khushal_hello_grpc/src/generated:hello_generated",
+        "//khushal_hello_grpc/src/ui/server:ui_server_lib",
+        "//khushal_hello_grpc/src/generated:generated",
         "//khushal_hello_grpc/src/common:common_lib",
         requirement("aiohttp"),
         requirement("pytest"),
         requirement("grpcio"),
+    ],
+)
+
+# User Service Tests - comprehensive test suite
+py_test(
+    name = "test_user_service",
+    srcs = ["test_user_service.py"],
+    deps = [
+        "//khushal_hello_grpc/src/user_service/impl:impl_lib",
+        "//khushal_hello_grpc/src/user_service/handlers:handlers_lib",
+        "//khushal_hello_grpc/src/user_service/models:models_lib",
+        "//khushal_hello_grpc/src/user_service/storage:storage_lib",
+        "//khushal_hello_grpc/src/generated:generated",
+        "//khushal_hello_grpc/src/common:common_lib",
+        requirement("grpcio"),
+        requirement("grpcio-health-checking"),
+        requirement("pytest"),
+        requirement("bcrypt"),
+        requirement("pyjwt"),
     ],
 ) 

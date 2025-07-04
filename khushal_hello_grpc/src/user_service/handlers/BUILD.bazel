@@ -1,0 +1,12 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "handlers_lib",
+    srcs = glob(["*.py"]),
+    deps = [
+        "//khushal_hello_grpc/src/user_service/storage:storage_lib",
+        requirement("pyjwt"),
+        requirement("bcrypt"),
+    ],
+    visibility = ["//visibility:public"],
+) 

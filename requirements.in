@@ -23,6 +23,10 @@ sqlalchemy  # For enhanced connection pooling and management
 pyyaml
 pydantic  # For typed configuration classes
 
+# Authentication and security
+PyJWT  # For JWT token handling
+bcrypt  # For password hashing
+
 # Observability and monitoring
 prometheus_client  # For metrics collection and export
 

@@ -1,0 +1,19 @@
+load("@my_pip_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "user_service",
+    srcs = ["server.py"],
+    main = "server.py",
+    deps = [
+        "//khushal_hello_grpc/src/user_service/impl:impl_lib",
+        "//khushal_hello_grpc/src/user_service/handlers:handlers_lib",
+        "//khushal_hello_grpc/src/user_service/storage:storage_lib",
+        "//khushal_hello_grpc/src/user_service/models:models_lib",
+        "//khushal_hello_grpc/src/user_service/config:config",
+        "//khushal_hello_grpc/src/generated:generated",
+        "//khushal_hello_grpc/src/common:common_lib",
+        requirement("grpcio"),
+        requirement("grpcio-health-checking"),
+    ],
+    visibility = ["//visibility:public"],
+) 

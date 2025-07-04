@@ -27,18 +27,22 @@ COPY khushal_hello_grpc/ ./khushal_hello_grpc/
 
 # Copy proto definitions into the image for code generation
 COPY protos/hello.proto /app/protos/hello.proto
+COPY protos/user.proto /app/protos/user.proto
 
-# Generate Python gRPC code from the proto file
+# Generate Python gRPC code from both proto files (unified generated target approach)
 # - Outputs to the correct package directory
 # - Touches __init__.py to ensure it's a package
-# - Patches hello_pb2_grpc.py to use relative imports (required for Bazel-style package structure)
+# - Patches both pb2_grpc.py files to use relative imports
 RUN python -m grpc_tools.protoc -I/app/protos \
     --python_out=/app/khushal_hello_grpc/src/generated \
     --grpc_python_out=/app/khushal_hello_grpc/src/generated \
     /app/protos/hello.proto \
+    /app/protos/user.proto \
     && touch /app/khushal_hello_grpc/src/generated/__init__.py \
     && sed -i 's/import hello_pb2 as hello__pb2/from . import hello_pb2 as hello__pb2/' \
-    /app/khushal_hello_grpc/src/generated/hello_pb2_grpc.py
+    /app/khushal_hello_grpc/src/generated/hello_pb2_grpc.py \
+    && sed -i 's/import user_pb2 as user__pb2/from . import user_pb2 as user__pb2/' \
+    /app/khushal_hello_grpc/src/generated/user_pb2_grpc.py
 
 # Copy the UI server implementation
 COPY khushal_hello_grpc/src/ui/server/server.py ./ui_server.py
@@ -71,6 +75,8 @@ echo "Starting gRPC UI Server..."\n\
 echo "Environment variables:"\n\
 echo "  GRPC_SERVER_HOST: ${GRPC_SERVER_HOST:-localhost}"\n\
 echo "  GRPC_SERVER_PORT: ${GRPC_SERVER_PORT:-50051}"\n\
+echo "  USER_SERVICE_HOST: ${USER_SERVICE_HOST:-localhost}"\n\
+echo "  USER_SERVICE_PORT: ${USER_SERVICE_PORT:-50052}"\n\
 echo "  UI_SERVER_PORT: ${UI_SERVER_PORT:-8081}"\n\
 echo "  APP_ENV: ${APP_ENV:-DEV}"\n\
 echo "Static files location: /app/static"\n\

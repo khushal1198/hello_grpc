@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package khushal_hello_grpc.user;
+
+option go_package = "khushal_hello_grpc/generated/user";
+
+// User Service - Handles user registration, authentication, and profile management
+service UserService {
+  // Register a new user
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  
+  // Login and get JWT token
+  rpc Login (LoginRequest) returns (LoginResponse);
+  
+  // Get user profile by ID
+  rpc GetUserProfile (UserProfileRequest) returns (UserProfileResponse);
+}
+
+// Registration request with user details
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+// Registration response with success/failure
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+  string user_id = 3;  // UUID of created user
+}
+
+// Login request with credentials
+message LoginRequest {
+  // Allow login with either username or email
+  oneof identifier {
+    string username = 1;
+    string email = 2;
+  }
+  string password = 3;
+}
+
+// Login response with JWT token
+message LoginResponse {
+  bool success = 1;
+  string message = 2;
+  string access_token = 3;  // JWT access token
+  string refresh_token = 4; // Optional refresh token
+  UserProfile user = 5;     // Basic user info
+}
+
+// Request user profile by ID
+message UserProfileRequest {
+  string user_id = 1;
+}
+
+// User profile response
+message UserProfileResponse {
+  bool success = 1;
+  string message = 2;
+  UserProfile profile = 3;
+}
+
+// Reusable user profile message
+message UserProfile {
+  string user_id = 1;
+  string username = 2;
+  string email = 3;
+  string created_at = 4;    // ISO format timestamp
+  string last_login = 5;    // ISO format timestamp
+} 
