@@ -24,144 +24,177 @@ class UserHandler:
     
     def __init__(self, user_store: UserStore):
         """Initialize with storage backend"""
+        logger.info("Initializing UserHandler with user storage backend")
         self.user_store = user_store
-        logger.info("UserHandler initialized with storage backend")
-    
-    def register_user(self, username: str, email: str, password: str) -> Tuple[bool, str, Optional[str]]:
-        """
-        Register a new user.
         
-        Returns:
-            Tuple of (success: bool, message: str, user_id: Optional[str])
-        """
+        # JWT configuration (should be moved to config in production)
+        self.jwt_secret = "your-secret-key-change-in-production"
+        self.jwt_algorithm = "HS256"
+        self.access_token_expire_minutes = 30
+        self.refresh_token_expire_days = 7
+        logger.info("UserHandler initialized successfully")
+    
+    def register_user(self, username: str, email: str, password: str) -> Optional[Dict[str, Any]]:
+        """Register a new user with password hashing"""
+        logger.info(f"Starting user registration for username: {username}, email: {email}")
+        
         try:
-            # Basic validation
+            # Validate input
+            logger.info("Validating registration input...")
             if not username or not email or not password:
-                return False, "All fields are required", None
+                logger.warning("Registration failed: Missing required fields")
+                return None
+            
+            if len(password) < 6:
+                logger.warning("Registration failed: Password too short")
+                return None
             
             # Hash password
-            password_hash = self._hash_password(password)
+            logger.info("Hashing password...")
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            logger.info("Password hashed successfully")
             
             # Create user
-            user = self.user_store.create_user(
-                username=username,
-                email=email,
-                password_hash=password_hash
-            )
+            logger.info("Creating user in storage...")
+            user = self.user_store.create_user(username, email, password_hash)
             
             if user:
-                logger.info(f"Created new user: {user}")
-                return True, "User registered successfully", user.id
+                logger.info(f"User created successfully: {user.id}")
+                # Generate tokens
+                logger.info("Generating JWT tokens...")
+                access_token = self._generate_access_token(user.id)
+                refresh_token = self._generate_refresh_token(user.id)
+                logger.info("JWT tokens generated successfully")
+                
+                return {
+                    "user": user.to_profile_dict(),
+                    "access_token": access_token,
+                    "refresh_token": refresh_token
+                }
             else:
-                return False, "Username or email already exists", None
+                logger.warning("User creation failed - user already exists or database error")
+                return None
                 
         except Exception as e:
-            logger.error(f"Failed to register user: {e}")
-            return False, f"Registration failed: {str(e)}", None
+            logger.error(f"Error during user registration: {e}", exc_info=True)
+            return None
     
-    def login_user(self, identifier: str, password: str, is_email: bool = False) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
-        """
-        Authenticate user and generate JWT tokens.
+    def login_user(self, username_or_email: str, password: str) -> Optional[Dict[str, Any]]:
+        """Authenticate user and return tokens"""
+        logger.info(f"Starting user login for: {username_or_email}")
         
-        Returns:
-            Tuple of (success: bool, message: str, tokens: Optional[Dict[str, Any]])
-            tokens contains: access_token, refresh_token, user profile
-        """
         try:
-            # Get user by identifier
-            user = (self.user_store.get_user_by_email(identifier) if is_email 
-                   else self.user_store.get_user_by_username(identifier))
+            # Find user by username or email
+            logger.info("Looking up user...")
+            user = None
+            if "@" in username_or_email:
+                logger.info("Searching by email...")
+                user = self.user_store.get_user_by_email(username_or_email)
+            else:
+                logger.info("Searching by username...")
+                user = self.user_store.get_user_by_username(username_or_email)
             
             if not user:
-                return False, "Invalid credentials", None
+                logger.warning(f"Login failed: User not found for {username_or_email}")
+                return None
+            
+            logger.info(f"User found: {user.id}")
             
             # Verify password
-            if not self._verify_password(password, user.password_hash):
-                return False, "Invalid credentials", None
+            logger.info("Verifying password...")
+            if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
+                logger.warning("Login failed: Invalid password")
+                return None
             
-            # Update last login
-            self.user_store.update_last_login(user.id, datetime.now())
+            logger.info("Password verified successfully")
             
             # Generate tokens
-            access_token = self._create_access_token(user.id)
-            refresh_token = self._create_refresh_token(user.id)
+            logger.info("Generating JWT tokens...")
+            access_token = self._generate_access_token(user.id)
+            refresh_token = self._generate_refresh_token(user.id)
+            logger.info("JWT tokens generated successfully")
             
-            # Return success with tokens and profile
-            return True, "Login successful", {
+            return {
+                "user": user.to_profile_dict(),
                 "access_token": access_token,
-                "refresh_token": refresh_token,
-                "user": user.to_profile_dict()
+                "refresh_token": refresh_token
             }
             
         except Exception as e:
-            logger.error(f"Login failed: {e}")
-            return False, f"Login failed: {str(e)}", None
+            logger.error(f"Error during user login: {e}", exc_info=True)
+            return None
     
-    def get_user_profile(self, user_id: str) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
-        """
-        Get user profile by ID.
+    def get_user_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get user profile by ID"""
+        logger.info(f"Getting user profile for ID: {user_id}")
         
-        Returns:
-            Tuple of (success: bool, message: str, profile: Optional[Dict[str, Any]])
-        """
         try:
+            logger.info("Looking up user by ID...")
             user = self.user_store.get_user_by_id(user_id)
+            
             if user:
-                return True, "Profile retrieved", user.to_profile_dict()
+                logger.info(f"User profile found: {user.id}")
+                return user.to_profile_dict()
             else:
-                return False, "User not found", None
+                logger.warning(f"User profile not found for ID: {user_id}")
+                return None
                 
         except Exception as e:
-            logger.error(f"Failed to get user profile: {e}")
-            return False, f"Failed to get profile: {str(e)}", None
+            logger.error(f"Error getting user profile: {e}", exc_info=True)
+            return None
     
-    def verify_token(self, token: str) -> Tuple[bool, Optional[str]]:
-        """
-        Verify JWT token and return user_id if valid.
+    def verify_token(self, token: str) -> Optional[str]:
+        """Verify JWT token and return user ID"""
+        logger.info("Verifying JWT token...")
         
-        Returns:
-            Tuple of (is_valid: bool, user_id: Optional[str])
-        """
         try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            return True, payload.get("sub")
+            logger.info("Decoding JWT token...")
+            payload = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
+            user_id = payload.get("user_id")
+            
+            if user_id:
+                logger.info(f"Token verified successfully for user: {user_id}")
+                return user_id
+            else:
+                logger.warning("Token verification failed: No user_id in payload")
+                return None
+                
         except jwt.ExpiredSignatureError:
-            return False, None
+            logger.warning("Token verification failed: Token expired")
+            return None
         except jwt.InvalidTokenError:
-            return False, None
+            logger.warning("Token verification failed: Invalid token")
+            return None
+        except Exception as e:
+            logger.error(f"Error verifying token: {e}", exc_info=True)
+            return None
     
-    def _hash_password(self, password: str) -> str:
-        """Hash password using bcrypt"""
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password.encode(), salt).decode()
-    
-    def _verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        """Verify password against hash"""
-        return bcrypt.checkpw(
-            plain_password.encode(),
-            hashed_password.encode()
-        )
-    
-    def _create_access_token(self, user_id: str) -> str:
-        """Create JWT access token"""
-        expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        expire = datetime.utcnow() + expires_delta
+    def _generate_access_token(self, user_id: str) -> str:
+        """Generate access token"""
+        logger.info(f"Generating access token for user: {user_id}")
         
-        to_encode = {
-            "sub": user_id,
+        expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
+        payload = {
+            "user_id": user_id,
             "exp": expire,
             "type": "access"
         }
-        return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    
-    def _create_refresh_token(self, user_id: str) -> str:
-        """Create JWT refresh token"""
-        expires_delta = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        expire = datetime.utcnow() + expires_delta
         
-        to_encode = {
-            "sub": user_id,
+        token = jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
+        logger.info("Access token generated successfully")
+        return token
+    
+    def _generate_refresh_token(self, user_id: str) -> str:
+        """Generate refresh token"""
+        logger.info(f"Generating refresh token for user: {user_id}")
+        
+        expire = datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
+        payload = {
+            "user_id": user_id,
             "exp": expire,
             "type": "refresh"
         }
-        return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM) 
+        
+        token = jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
+        logger.info("Refresh token generated successfully")
+        return token 

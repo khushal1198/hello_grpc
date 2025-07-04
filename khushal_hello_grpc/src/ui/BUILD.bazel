@@ -1,20 +1,5 @@
 load("@my_pip_deps//:requirements.bzl", "requirement")
 
-py_binary(
-    name = "ui_server",
-    srcs = ["main.py"],
-    main = "main.py",
-    deps = [
-        "//khushal_hello_grpc/src/ui/server:ui_server_lib",
-        "//khushal_hello_grpc/src/ui/config:config",
-        "//khushal_hello_grpc/src/generated:generated",
-        requirement("grpcio"),
-        requirement("aiohttp"),
-        requirement("aiohttp-cors"),
-    ],
-    visibility = ["//visibility:public"],
-)
-
 # Export all static files for other packages to use
 filegroup(
     name = "all_static",
