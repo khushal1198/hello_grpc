@@ -1,35 +1,30 @@
-# gRPC Requests PostgreSQL Schema
+# PostgreSQL Database Schemas
 
-Simple schema for storing gRPC requests in PostgreSQL.
+Database schemas for the gRPC services.
 
-## Schema
+## Tables
 
-**Table:** `grpc_requests`
+### 1. gRPC Requests Table (`grpc_requests_schema.sql`)
+- `id` (VARCHAR 36) - Primary key
+- `created_ts` - Creation timestamp
+- `last_updated_ts` - Last update timestamp
+- `request_name` - gRPC request name
+- `response_message` - Response message
+- `metadata` - JSON metadata
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | VARCHAR(36) PRIMARY KEY | UUID string |
-| `created_ts` | TIMESTAMP WITH TIME ZONE NOT NULL | Creation timestamp |
-| `last_updated_ts` | TIMESTAMP WITH TIME ZONE NOT NULL | Last update timestamp |
-| `request_name` | TEXT NOT NULL | gRPC request name |
-| `response_message` | TEXT NOT NULL | Response message |
-| `metadata` | JSONB | JSON metadata |
+### 2. Users Table (`users_schema.sql`)
+- `id` (UUID) - Primary key (auto-generated)
+- `created_ts` - Account creation timestamp
+- `last_updated_ts` - Last update timestamp
+- `username` (VARCHAR 50) - Unique username
+- `email` (VARCHAR 255) - Unique email address
+- `password_hash` - Bcrypt hashed password
+- `last_login` - Last login timestamp
 
 ## Usage
 
-Apply schema:
 ```bash
-psql -h <host> -p <port> -U <user> -d <database> -f grpc_requests_schema.sql
-```
-
-Example queries:
-```sql
--- Recent requests
-SELECT * FROM grpc_requests ORDER BY created_ts DESC LIMIT 10;
-
--- Filter by name
-SELECT * FROM grpc_requests WHERE request_name = 'health_check';
-
--- JSON queries
-SELECT * FROM grpc_requests WHERE metadata->>'service' = 'HelloService';
+# Apply schemas
+psql -h localhost -p 5432 -U dev_user -d myapp -f grpc_requests_schema.sql
+psql -h localhost -p 5432 -U dev_user -d myapp -f users_schema.sql
 ``` 
