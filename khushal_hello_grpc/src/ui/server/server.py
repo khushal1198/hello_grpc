@@ -119,14 +119,15 @@ class UserServiceClient:
         
         try:
             if is_email:
-                identifier_msg = user_pb2.LoginRequest.Identifier(email=identifier)
+                request = user_pb2.LoginRequest(
+                    email=identifier,
+                    password=password
+                )
             else:
-                identifier_msg = user_pb2.LoginRequest.Identifier(username=identifier)
-            
-            request = user_pb2.LoginRequest(
-                identifier=identifier_msg,
-                password=password
-            )
+                request = user_pb2.LoginRequest(
+                    username=identifier,
+                    password=password
+                )
             response = await self.stub.Login(request)
             return response
         except Exception as e:
