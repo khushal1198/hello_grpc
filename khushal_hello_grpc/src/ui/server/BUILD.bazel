@@ -10,6 +10,7 @@ py_library(
         requirement("aiohttp"),
         requirement("aiohttp-cors"),
         requirement("grpcio"),
+        requirement("PyJWT"),
     ],
     visibility = ["//visibility:public"],
 )
@@ -27,6 +28,7 @@ py_binary(
         requirement("aiohttp"),
         requirement("aiohttp-cors"),
         requirement("grpcio"),
+        requirement("PyJWT"),
     ],
     visibility = ["//visibility:public"],
 ) 

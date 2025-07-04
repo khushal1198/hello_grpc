@@ -10,6 +10,14 @@
     <div class="container">
         <h1>🚀 gRPC Hello Client</h1>
         
+        <!-- Authentication Section -->
+        <div class="auth-section">
+            <div class="auth-info">
+                <span id="authStatus">Not logged in</span>
+                <a href="/static/login.html" class="auth-link" id="authLink">Login / Register</a>
+            </div>
+        </div>
+        
         <div class="connection-info">
             <span class="connection-status" id="connectionStatus"></span>
             <span id="connectionText">Checking connection...</span>
@@ -35,5 +43,6 @@
     </div>
 
     <script src="/static/assets/js/client.js"></script>
+    <script src="/static/assets/js/home.js"></script>
 </body>
 </html> 

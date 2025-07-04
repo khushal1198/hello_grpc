@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - gRPC Services</title>
+    <link rel="stylesheet" href="/static/assets/css/style.css">
+    <link rel="stylesheet" href="/static/assets/css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with user info -->
+        <div class="dashboard-header">
+            <div class="user-info">
+                <h1>🎯 Dashboard</h1>
+                <div class="user-details">
+                    <span class="welcome-text">Welcome back, <span id="username">Loading...</span>!</span>
+                    <button class="logout-button" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Card -->
+        <div class="profile-card">
+            <h2>👤 Profile Information</h2>
+            <div class="profile-details">
+                <div class="profile-item">
+                    <label>Username:</label>
+                    <span id="profileUsername">Loading...</span>
+                </div>
+                <div class="profile-item">
+                    <label>Email:</label>
+                    <span id="profileEmail">Loading...</span>
+                </div>
+                <div class="profile-item">
+                    <label>User ID:</label>
+                    <span id="profileUserId">Loading...</span>
+                </div>
+                <div class="profile-item">
+                    <label>Member Since:</label>
+                    <span id="profileCreatedAt">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Section -->
+        <div class="services-section">
+            <h2>🚀 Available Services</h2>
+            
+            <!-- Hello Service -->
+            <div class="service-card">
+                <h3>Hello Service</h3>
+                <p>Send greeting requests to the gRPC Hello service</p>
+                
+                <div class="connection-info">
+                    <span class="connection-status" id="connectionStatus"></span>
+                    <span id="connectionText">Checking connection...</span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="nameInput">Enter your name:</label>
+                    <input type="text" id="nameInput" placeholder="e.g., John Doe" value="World">
+                </div>
+                
+                <div class="button-group">
+                    <button id="sendButton" onclick="sendHelloRequest()">Send Hello Request</button>
+                    <button id="healthButton" onclick="checkHealth()">Check Server Health</button>
+                    <button id="clearButton" onclick="clearResponse()">Clear Response</button>
+                </div>
+                
+                <div class="response-area">
+                    <div class="response-title">Server Response:</div>
+                    <div class="response-content" id="responseContent">No response yet. Click a button to make a request.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div class="status" id="status" style="display: none;"></div>
+    </div>
+
+    <script src="/static/assets/js/client.js"></script>
+    <script src="/static/assets/js/dashboard.js"></script>
+</body>
+</html> 

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - gRPC Services</title>
+    <link rel="stylesheet" href="/static/assets/css/style.css">
+    <link rel="stylesheet" href="/static/assets/css/auth.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-header">
+            <h1>🔐 Authentication</h1>
+            <p>Access your gRPC services account</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="tab-button active" onclick="showTab('login')">Login</button>
+            <button class="tab-button" onclick="showTab('register')">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginTab" class="auth-form active">
+            <h2>Welcome Back</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="loginIdentifier">Username or Email</label>
+                    <input type="text" id="loginIdentifier" name="identifier" placeholder="Enter username or email" required>
+                </div>
+                <div class="input-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="auth-button">Login</button>
+            </form>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerTab" class="auth-form">
+            <h2>Create Account</h2>
+            <form id="registerForm">
+                <div class="input-group">
+                    <label for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" name="username" placeholder="Choose a username" required>
+                </div>
+                <div class="input-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" name="email" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" name="password" placeholder="Create a password" required>
+                </div>
+                <div class="input-group">
+                    <label for="registerConfirmPassword">Confirm Password</label>
+                    <input type="password" id="registerConfirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="auth-button">Register</button>
+            </form>
+        </div>
+
+        <!-- Status Messages -->
+        <div class="status" id="authStatus" style="display: none;"></div>
+
+        <!-- Navigation -->
+        <div class="auth-navigation">
+            <a href="/static/index.html" class="nav-link">← Back to Home</a>
+        </div>
+    </div>
+
+    <script src="/static/assets/js/auth.js"></script>
+</body>
+</html> 

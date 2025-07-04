@@ -63,8 +63,11 @@ class PostgresUserStorage(UserStore):
                 "password_hash": password_hash
             })
             
-            created = self._store.create(user.to_dict())
-            return User.from_dict(created) if created else None
+            # Use insert method instead of create
+            user_id = self._store.insert(user)
+            if user_id:
+                return self.get_user_by_id(user_id)
+            return None
             
         except Exception as e:
             import logging
@@ -74,8 +77,8 @@ class PostgresUserStorage(UserStore):
     def get_user_by_id(self, user_id: str) -> Optional[User]:
         """Get user by ID"""
         try:
-            data = self._store.get_by_id(user_id)
-            return User.from_dict(data) if data else None
+            # Use get method with filters instead of get_by_id
+            return self._store.get(filters={"id": user_id})
         except Exception as e:
             import logging
             logging.error(f"Failed to get user by ID: {e}")
@@ -84,8 +87,8 @@ class PostgresUserStorage(UserStore):
     def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username"""
         try:
-            results = self._store.get_by_field("username", username)
-            return User.from_dict(results[0]) if results else None
+            # Use get method with filters instead of get_by_field
+            return self._store.get(filters={"username": username})
         except Exception as e:
             import logging
             logging.error(f"Failed to get user by username: {e}")
@@ -94,8 +97,8 @@ class PostgresUserStorage(UserStore):
     def get_user_by_email(self, email: str) -> Optional[User]:
         """Get user by email"""
         try:
-            results = self._store.get_by_field("email", email)
-            return User.from_dict(results[0]) if results else None
+            # Use get method with filters instead of get_by_field
+            return self._store.get(filters={"email": email})
         except Exception as e:
             import logging
             logging.error(f"Failed to get user by email: {e}")
@@ -108,11 +111,17 @@ class PostgresUserStorage(UserStore):
             if not user:
                 return False
                 
-            updated_data = user.to_dict()
-            updated_data["last_login"] = login_time.isoformat()
+            # Create updated user object
+            updated_user = User.from_dict({
+                **user.to_dict(),
+                "last_login": login_time,
+                "last_updated_ts": datetime.now()
+            })
             
-            success = self._store.update(user_id, updated_data)
-            return bool(success)
+            # Delete old record and insert new one (since User is immutable)
+            self._store.delete(filters={"id": user_id})
+            new_id = self._store.insert(updated_user)
+            return bool(new_id)
             
         except Exception as e:
             import logging
